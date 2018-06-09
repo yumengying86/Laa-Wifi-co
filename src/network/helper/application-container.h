@@ -195,15 +195,20 @@ public:
   void Start (Time start);
 
   /**
-   * \brief Start all of the Applications in this container at the start time 
-   * given as a parameter, plus some jitter.
+   * \brief Arrange for all of the Applications in this container to Start()
+   * at the Time given as a parameter, plus some jitter.
    *
-   * This method iterates through the contained Applications and calls
-   * their Start() methods with the provided start Time, plus a jitter value
-   * drawn from the provided random variable.
+   * All Applications need to be provided with a starting simulation time and
+   * a stopping simulation time.  The ApplicationContainer is a convenient 
+   * place for allowing all of the contained Applications to be told to wake
+   * up and start doing their thing (Start) at a common time.
+   *
+   * This method simply iterates through the contained Applications and calls
+   * their Start() methods with the provided Time, plus a jitter drawn from
+   * the provided random variable.
    *
    * \param start The Time at which each of the applications should start.
-   * \param rv The random variable that adds jitter (units of seconds)
+   * \param rv The random variable that adds jitter
    */
   void StartWithJitter (Time start, Ptr<RandomVariableStream> rv);
 
