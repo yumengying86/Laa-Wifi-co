@@ -6,6 +6,7 @@ def build(bld):
         'model/bulk-send-application.cc',
         'model/file-transfer-application.cc',
         'model/onoff-application.cc',
+        'model/voice-application.cc',
         'model/packet-sink.cc',
         'model/udp-client.cc',
         'model/udp-server.cc',
@@ -31,7 +32,8 @@ def build(bld):
     applications_test = bld.create_ns3_module_test_library('applications')
     applications_test.source = [
         'test/three-gpp-http-client-server-test.cc', 
-        'test/udp-client-server-test.cc'
+        'test/udp-client-server-test.cc',
+        'test/voice-application-test-suite.cc',
         ]
 
     headers = bld(features='ns3header')
@@ -40,6 +42,7 @@ def build(bld):
         'model/bulk-send-application.h',
         'model/file-transfer-application.h',
         'model/onoff-application.h',
+        'model/voice-application.h',
         'model/packet-sink.h',
         'model/udp-client.h',
         'model/udp-server.h',
@@ -62,6 +65,9 @@ def build(bld):
         'helper/three-gpp-http-helper.h'
         ]
     
+    if (bld.env['ENABLE_EXAMPLES']):
+        bld.recurse('examples')
+
     if (bld.env['ENABLE_EXAMPLES']):
         bld.recurse('examples')
 
