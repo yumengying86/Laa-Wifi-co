@@ -126,6 +126,12 @@ public:
    * \return the User part of the LteFfrSap provided by the FfrAlgorithm
    */
   virtual LteFfrSapUser* GetLteFfrSapUser () = 0;
+
+  /**
+   *
+   * \return true if there is data on the buffer of the scheduler
+   */
+  bool IsThereData ();
   
 protected:
     

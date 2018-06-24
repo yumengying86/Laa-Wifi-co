@@ -475,6 +475,11 @@ FdBetFfMacScheduler::RefreshHarqProcesses ()
 
 }
 
+bool
+FdBetFfMacScheduler::DoIsThereData ()
+{
+  return true;
+}
 
 void
 FdBetFfMacScheduler::DoSchedDlTriggerReq (const struct FfMacSchedSapProvider::SchedDlTriggerReqParameters& params)

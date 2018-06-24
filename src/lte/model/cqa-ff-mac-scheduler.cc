@@ -640,6 +640,11 @@ CqaFfMacScheduler::RefreshHarqProcesses ()
 
 }
 
+bool
+CqaFfMacScheduler::DoIsThereData ()
+{
+  return true;
+}
 
 void
 CqaFfMacScheduler::DoSchedDlTriggerReq (const struct FfMacSchedSapProvider::SchedDlTriggerReqParameters& params)
