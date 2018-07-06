@@ -72,7 +72,7 @@ LteDownlinkPowerControlTestSuite::LteDownlinkPowerControlTestSuite ()
     activeRbs_txpowdB30nrb6run1earfcn500[2] = 3;
     activeRbs_txpowdB30nrb6run1earfcn500[3] = 5;
 
-    uint16_t earfcn = 500;
+    uint32_t earfcn = 500;
     uint8_t bw = 6;
     double powerTx = 30;
 
@@ -112,7 +112,7 @@ LteDownlinkPowerControlTestSuite::LteDownlinkPowerControlTestSuite ()
     activeRbs_txpowdB30nrb6run1earfcn500[2] = 3;
     activeRbs_txpowdB30nrb6run1earfcn500[3] = 5;
 
-    uint16_t earfcn = 500;
+    uint32_t earfcn = 500;
     uint8_t bw = 6;
     double powerTx = 30;
 
@@ -159,7 +159,7 @@ LteDownlinkPowerControlTestSuite::LteDownlinkPowerControlTestSuite ()
     activeRbs_txpowdB30nrb25run1earfcn500[13] = 21;
     activeRbs_txpowdB30nrb25run1earfcn500[14] = 24;
 
-    uint16_t earfcn = 500;
+    uint32_t earfcn = 500;
     uint8_t bw = 25;
     double powerTx = 30;
 
@@ -248,7 +248,7 @@ LteDownlinkPowerControlTestSuite::LteDownlinkPowerControlTestSuite ()
     activeRbs_txpowdB30nrb25run1earfcn500[13] = 21;
     activeRbs_txpowdB30nrb25run1earfcn500[14] = 24;
 
-    uint16_t earfcn = 500;
+    uint32_t earfcn = 500;
     uint8_t bw = 25;
     double powerTx = 30;
 
@@ -356,7 +356,7 @@ static LteDownlinkPowerControlTestSuite lteDownlinkPowerControlTestSuite;
  */
 
 LteDownlinkPowerControlSpectrumValueTestCase::LteDownlinkPowerControlSpectrumValueTestCase (std::string name,
-                                                                                            uint16_t earfcn, uint8_t bw, double powerTx,
+                                                                                            uint32_t earfcn, uint8_t bw, double powerTx,
                                                                                             std::map<int, double> powerTxMap, std::vector <int> activeRbs,
                                                                                             SpectrumValue& expected)
   : TestCase ("Downlink Power Control: " + name),
