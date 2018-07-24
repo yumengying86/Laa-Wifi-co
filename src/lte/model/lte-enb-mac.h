@@ -28,6 +28,7 @@
 
 #include <map>
 #include <vector>
+#include <bitset>
 #include <ns3/lte-common.h>
 #include <ns3/lte-mac-sap.h>
 #include <ns3/lte-enb-cmac-sap.h>
@@ -261,6 +262,12 @@ private:
   * \returns LteEnbCmacSapProvider::AllocateNcRaPreambleReturnValue
   */
   LteEnbCmacSapProvider::AllocateNcRaPreambleReturnValue DoAllocateNcRaPreamble (uint16_t rnti);
+  /**
+   * Set the DL FDD Almost Blank Subframe pattern.
+   *
+   * \param absPattern bitmask as per TS36.423 section 9.2.54 ABS Information
+   */
+  void DoSetAbsPattern (std::bitset<40> absPattern);
 
   // forwarded from LteMacSapProvider
   /**
@@ -467,6 +474,11 @@ private:
   /// component carrier Id used to address sap
   uint8_t m_componentCarrierId;
  
+ /**
+  * DL FDD Almost Blank Subframe pattern
+  * bitmask as per TS36.423 section 9.2.54 ABS Information
+  */
+  std::bitset<40> m_absPattern;
 };
 
 } // end namespace ns3

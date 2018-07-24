@@ -31,6 +31,7 @@
 
 #include <map>
 #include <set>
+#include <bitset>
 
 
 
@@ -381,6 +382,12 @@ private:
    * \param sib1 LteRrcSap::SystemInformationBlockType1
    */
   void DoSetSystemInformationBlockType1 (LteRrcSap::SystemInformationBlockType1 sib1);
+  /**
+   * Set the DL FDD Almost Blank Subframe pattern.
+   *
+   * \param absPattern bitmask as per TS36.423 section 9.2.54 ABS Information
+   */
+  void DoSetAbsPattern (std::bitset<40> absPattern);
 
   // LteEnbPhySapProvider forwarded methods
   void DoSendMacPdu (Ptr<Packet> p);
@@ -479,6 +486,12 @@ private:
    * The message content is specified by the upper layer through the RRC SAP.
    */
   LteRrcSap::SystemInformationBlockType1 m_sib1;
+
+  /**
+   * DL FDD Almost Blank Subframe pattern
+   * bitmask as per TS36.423 section 9.2.54 ABS Information
+   */
+  std::bitset<40> m_absPattern;
 
   Ptr<LteHarqPhy> m_harqPhyModule; ///< HARQ Phy module
 

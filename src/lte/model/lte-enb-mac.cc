@@ -74,9 +74,9 @@ public:
   virtual void ReconfigureLc (LcInfo lcinfo);
   virtual void ReleaseLc (uint16_t rnti, uint8_t lcid);
   virtual void UeUpdateConfigurationReq (UeConfig params);
+  virtual void SetAbsPattern (std::bitset<40> absPattern);
   virtual RachConfig GetRachConfig ();
   virtual AllocateNcRaPreambleReturnValue AllocateNcRaPreamble (uint16_t rnti);
-  
 
 private:
   LteEnbMac* m_mac; ///< the MAC
@@ -128,6 +128,12 @@ void
 EnbMacMemberLteEnbCmacSapProvider::UeUpdateConfigurationReq (UeConfig params)
 {
   m_mac->DoUeUpdateConfigurationReq (params);
+}
+
+void
+EnbMacMemberLteEnbCmacSapProvider::SetAbsPattern (std::bitset<40> absPattern)
+{
+  m_mac->DoSetAbsPattern (absPattern);
 }
 
 LteEnbCmacSapProvider::RachConfig 
@@ -574,18 +580,25 @@ LteEnbMac::DoSubframeIndication (uint32_t frameNo, uint32_t subframeNo)
     {
       dlSchedSubframeNo = dlSchedSubframeNo + m_macChTtiDelay;
     }
-  FfMacSchedSapProvider::SchedDlTriggerReqParameters dlparams;
-  dlparams.m_sfnSf = ((0x3FF & dlSchedFrameNo) << 4) | (0xF & dlSchedSubframeNo);
 
-  // Forward DL HARQ feebacks collected during last TTI
-  if (m_dlInfoListReceived.size () > 0)
+  NS_ASSERT_MSG (dlSchedSubframeNo > 0 && dlSchedSubframeNo <= 10, "code assumes subframe in 1..10");
+  bool dlSchedSubframeIsAbs = m_absPattern[(dlSchedFrameNo % 4) * 10 + ((dlSchedSubframeNo - 1) % 10)];
+
+  if (!dlSchedSubframeIsAbs)
     {
-      dlparams.m_dlInfoList = m_dlInfoListReceived;
-      // empty local buffer
-      m_dlInfoListReceived.clear ();
-    }
+      FfMacSchedSapProvider::SchedDlTriggerReqParameters dlparams;
+      dlparams.m_sfnSf = ((0x3FF & dlSchedFrameNo) << 4) | (0xF & dlSchedSubframeNo);
 
-  m_schedSapProvider->SchedDlTriggerReq (dlparams);
+      // Forward DL HARQ feebacks collected during last TTI
+      if (m_dlInfoListReceived.size () > 0)
+        {
+          dlparams.m_dlInfoList = m_dlInfoListReceived;
+          // empty local buffer
+          m_dlInfoListReceived.clear ();
+        }
+
+      m_schedSapProvider->SchedDlTriggerReq (dlparams);
+    }
 
 
   // --- UPLINK ---
@@ -639,7 +652,14 @@ LteEnbMac::DoSubframeIndication (uint32_t frameNo, uint32_t subframeNo)
       m_ulInfoListReceived.clear ();
     }
 
-  m_schedSapProvider->SchedUlTriggerReq (ulparams);
+  if (!dlSchedSubframeIsAbs)
+    {
+      // In FDD it seems we only have DL ABS. However, when we have DL
+      // ABS, we cannot transmit the PDCCH. Hence, the UL subframe
+      // whose DCI would need to be transmitted in the DL ABS will be
+      // almost blank as well - no PUSCH transmission, at least.
+      m_schedSapProvider->SchedUlTriggerReq (ulparams);
+    }
 
 }
 
@@ -1031,6 +1051,13 @@ LteEnbMac::DoAllocateNcRaPreamble (uint16_t rnti)
       ret.raPrachMaskIndex = 0;
     }
   return ret;
+}
+
+void
+LteEnbMac::DoSetAbsPattern (std::bitset<40> absPattern)
+{
+  NS_LOG_FUNCTION (this);
+  m_absPattern = absPattern;
 }
 
 

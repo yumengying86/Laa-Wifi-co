@@ -753,15 +753,29 @@ LteEnbPhy::StartSubFrame (void)
         }
     }
 
-  SendControlChannels (ctrlMsg);
+  NS_ASSERT_MSG (m_nrSubFrames > 0 && m_nrSubFrames <= 10, "code assumes subframe in 1..10");
+  uint32_t absIndex = (m_nrFrames % 4) * 10 + ((m_nrSubFrames - 1) % 10);
+  uint32_t absIndex2 = (m_nrFrames * 10 + (m_nrSubFrames - 1)) % 40;
+  bool isAlmostBlankSubframe = m_absPattern[absIndex];
 
-  // send data frame
-  Ptr<PacketBurst> pb = GetPacketBurst ();
-  if (pb)
+  if (isAlmostBlankSubframe) // Almost Blank Subframe
     {
-      Simulator::Schedule (DL_CTRL_DELAY_FROM_SUBFRAME_START, // ctrl frame fixed to 3 symbols
-                           &LteEnbPhy::SendDataChannels,
-                           this,pb);
+      NS_LOG_LOGIC ("Almost Blank Subframe (ABS), absIndex=" << absIndex << ", absIndex2=" << absIndex2 << ", m_absPattern=" << m_absPattern);
+      Ptr<PacketBurst> pb = GetPacketBurst ();
+      NS_ASSERT_MSG (pb == 0, "the LTE MAC scheduler shall not allocate data transmission in an ABS");
+    }
+  else // regular subframe
+    {
+      SendControlChannels (ctrlMsg);
+
+      // send data frame
+      Ptr<PacketBurst> pb = GetPacketBurst ();
+      if (pb)
+        {
+          Simulator::Schedule (DL_CTRL_DELAY_FROM_SUBFRAME_START, // ctrl frame fixed to 3 symbols
+                               &LteEnbPhy::SendDataChannels,
+                               this,pb);
+        }
     }
 
   // trigger the MAC
@@ -1160,6 +1174,14 @@ LteEnbPhy::DoSetSystemInformationBlockType1 (LteRrcSap::SystemInformationBlockTy
 {
   NS_LOG_FUNCTION (this);
   m_sib1 = sib1;
+}
+
+
+void
+LteEnbPhy::DoSetAbsPattern (std::bitset<40> absPattern)
+{
+  NS_LOG_FUNCTION (this);
+  m_absPattern = absPattern;
 }
 
 
