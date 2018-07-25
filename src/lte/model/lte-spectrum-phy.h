@@ -41,6 +41,7 @@
 #include <ns3/ff-mac-common.h>
 #include <ns3/lte-harq-phy.h>
 #include <ns3/lte-common.h>
+#include <ns3/lte-chunk-processor.h>
 
 namespace ns3 {
 
@@ -418,7 +419,7 @@ public:
   * 
   * \param sinr vector of sinr perceived per each RB
   */
-  void UpdateSinrPerceived (const SpectrumValue& sinr);
+  void UpdateSinrPerceived (std::list<LteListChunkProcessor::Chunk> sinr);
   
   /** 
   * 
@@ -515,7 +516,7 @@ private:
   
   uint8_t m_componentCarrierId; ///< the component carrier ID
   expectedTbs_t m_expectedTbs; ///< the expected TBS
-  SpectrumValue m_sinrPerceived; ///< the preceived SINR 
+  std::list<LteListChunkProcessor::Chunk> m_sinrPerceived; ///< the preceived SINR 
 
   /// Provides uniform random variables.
   Ptr<UniformRandomVariable> m_random;

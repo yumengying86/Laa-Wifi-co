@@ -443,12 +443,12 @@ LteDownlinkPowerControlTestCase::DoRun (void)
 
   Ptr<LtePhy> ue1Phy = ueDevs.Get (0)->GetObject<LteUeNetDevice> ()->GetPhy ()->GetObject<LtePhy> ();
 
-  Ptr<LteChunkProcessor> testDlDataPowerReceived = Create<LteChunkProcessor> ();
+  Ptr<LteAverageChunkProcessor> testDlDataPowerReceived = Create<LteAverageChunkProcessor> ();
   LteSpectrumValueCatcher dlDataPowerReceivedCatcher;
   testDlDataPowerReceived->AddCallback (MakeCallback (&LteSpectrumValueCatcher::ReportValue, &dlDataPowerReceivedCatcher));
   ue1Phy->GetDownlinkSpectrumPhy ()->AddDataPowerChunkProcessor (testDlDataPowerReceived);
 
-  Ptr<LteChunkProcessor> testDlCtrlPowerReceived = Create<LteChunkProcessor> ();
+  Ptr<LteAverageChunkProcessor> testDlCtrlPowerReceived = Create<LteAverageChunkProcessor> ();
   LteSpectrumValueCatcher dlCtrlPowerReceivedCatcher;
   testDlCtrlPowerReceived->AddCallback (MakeCallback (&LteSpectrumValueCatcher::ReportValue, &dlCtrlPowerReceivedCatcher));
   ue1Phy->GetDownlinkSpectrumPhy ()->AddRsPowerChunkProcessor (testDlCtrlPowerReceived);

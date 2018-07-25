@@ -924,9 +924,9 @@ LteSpectrumPhy::StartRxUlSrs (Ptr<LteSpectrumSignalParametersUlSrsFrame> lteUlSr
 
 
 void
-LteSpectrumPhy::UpdateSinrPerceived (const SpectrumValue& sinr)
+LteSpectrumPhy::UpdateSinrPerceived (std::list<LteListChunkProcessor::Chunk> sinr)
 {
-  NS_LOG_FUNCTION (this << sinr);
+  NS_LOG_FUNCTION (this);
   m_sinrPerceived = sinr;
 }
 
@@ -990,7 +990,12 @@ LteSpectrumPhy::EndRxData ()
   // apply transmission mode gain
   NS_LOG_DEBUG (this << " txMode " << (uint16_t)m_transmissionMode << " gain " << m_txModeGain.at (m_transmissionMode));
   NS_ASSERT (m_transmissionMode < m_txModeGain.size ());
-  m_sinrPerceived *= m_txModeGain.at (m_transmissionMode);
+  for (std::list<LteListChunkProcessor::Chunk>::iterator chunkIt = m_sinrPerceived.begin ();
+       chunkIt != m_sinrPerceived.end ();
+       ++chunkIt)
+    {
+      *chunkIt->m_spectrumValue *= m_txModeGain.at (m_transmissionMode);
+    }
   
   while (itTb!=m_expectedTbs.end ())
     {
@@ -1188,7 +1193,12 @@ LteSpectrumPhy::EndRxDlCtrl ()
   if (m_transmissionMode>0)
     {
       // in case of MIMO, ctrl is always txed as TX diversity
-      m_sinrPerceived *= m_txModeGain.at (1);
+      for (std::list<LteListChunkProcessor::Chunk>::iterator chunkIt = m_sinrPerceived.begin ();
+           chunkIt != m_sinrPerceived.end ();
+           ++chunkIt)
+        {
+          *chunkIt->m_spectrumValue *= m_txModeGain.at (1);
+        }
     }
 //   m_sinrPerceived *= m_txModeGain.at (m_transmissionMode);
   bool error = false;
