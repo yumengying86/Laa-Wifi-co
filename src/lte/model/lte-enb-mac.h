@@ -440,6 +440,23 @@ private:
    */
   uint32_t m_subframeNo;
   /**
+   * frame number of DL subframe to be scheduled in current subframe indication
+   */
+  uint32_t m_dlSchedFrameNo;
+  /**
+   * subframe number of DL subframe to be scheduled in current subframe indication
+   */
+  uint32_t m_dlSchedSubframeNo;
+  /**
+   * frame number of UL subframe to be scheduled in current subframe indication
+   */
+  uint32_t m_ulSchedFrameNo;
+  /**
+   * subframe number of UL subframe to be scheduled in current subframe indication
+   */
+  uint32_t m_ulSchedSubframeNo;
+
+  /**
    * Trace information regarding DL scheduling
    * Frame number, Subframe number, RNTI, MCS of TB1, size of TB1,
    * MCS of TB2 (0 if not present), size of TB2 (0 if not present)

@@ -579,26 +579,26 @@ LteEnbMac::DoSubframeIndication (uint32_t frameNo, uint32_t subframeNo)
       m_receivedRachPreambleCount.clear ();
     }
   // Get downlink transmission opportunities
-  uint32_t dlSchedFrameNo = m_frameNo;
-  uint32_t dlSchedSubframeNo = m_subframeNo;
+  m_dlSchedFrameNo = m_frameNo;
+  m_dlSchedSubframeNo = m_subframeNo;
   //   NS_LOG_DEBUG (this << " sfn " << frameNo << " sbfn " << subframeNo);
-  if (dlSchedSubframeNo + m_macChTtiDelay > 10)
+  if (m_dlSchedSubframeNo + m_macChTtiDelay > 10)
     {
-      dlSchedFrameNo++;
-      dlSchedSubframeNo = (dlSchedSubframeNo + m_macChTtiDelay) % 10;
+      m_dlSchedFrameNo++;
+      m_dlSchedSubframeNo = (m_dlSchedSubframeNo + m_macChTtiDelay) % 10;
     }
   else
     {
-      dlSchedSubframeNo = dlSchedSubframeNo + m_macChTtiDelay;
+      m_dlSchedSubframeNo = m_dlSchedSubframeNo + m_macChTtiDelay;
     }
 
-  NS_ASSERT_MSG (dlSchedSubframeNo > 0 && dlSchedSubframeNo <= 10, "code assumes subframe in 1..10");
-  bool dlSchedSubframeIsAbs = m_absPattern[(dlSchedFrameNo % 4) * 10 + ((dlSchedSubframeNo - 1) % 10)];
+  NS_ASSERT_MSG (m_dlSchedSubframeNo > 0 && m_dlSchedSubframeNo <= 10, "code assumes subframe in 1..10");
+  bool dlSchedSubframeIsAbs = m_absPattern[(m_dlSchedFrameNo % 4) * 10 + ((m_dlSchedSubframeNo - 1) % 10)];
 
   if (!dlSchedSubframeIsAbs)
     {
       FfMacSchedSapProvider::SchedDlTriggerReqParameters dlparams;
-      dlparams.m_sfnSf = ((0x3FF & dlSchedFrameNo) << 4) | (0xF & dlSchedSubframeNo);
+      dlparams.m_sfnSf = ((0x3FF & m_dlSchedFrameNo) << 4) | (0xF & m_dlSchedSubframeNo);
 
       // Forward DL HARQ feebacks collected during last TTI
       if (m_dlInfoListReceived.size () > 0)
@@ -630,20 +630,20 @@ LteEnbMac::DoSubframeIndication (uint32_t frameNo, uint32_t subframeNo)
 
 
   // Get uplink transmission opportunities
-  uint32_t ulSchedFrameNo = m_frameNo;
-  uint32_t ulSchedSubframeNo = m_subframeNo;
+  uint32_t m_ulSchedFrameNo = m_frameNo;
+  uint32_t m_ulSchedSubframeNo = m_subframeNo;
   //   NS_LOG_DEBUG (this << " sfn " << frameNo << " sbfn " << subframeNo);
-  if (ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY) > 10)
+  if (m_ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY) > 10)
     {
-      ulSchedFrameNo++;
-      ulSchedSubframeNo = (ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY)) % 10;
+      m_ulSchedFrameNo++;
+      m_ulSchedSubframeNo = (m_ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY)) % 10;
     }
   else
     {
-      ulSchedSubframeNo = ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY);
+      m_ulSchedSubframeNo = m_ulSchedSubframeNo + (m_macChTtiDelay + UL_PUSCH_TTIS_DELAY);
     }
   FfMacSchedSapProvider::SchedUlTriggerReqParameters ulparams;
-  ulparams.m_sfnSf = ((0x3FF & ulSchedFrameNo) << 4) | (0xF & ulSchedSubframeNo);
+  ulparams.m_sfnSf = ((0x3FF & m_ulSchedFrameNo) << 4) | (0xF & m_ulSchedSubframeNo);
 
   // Forward DL HARQ feebacks collected during last TTI
   if (m_ulInfoListReceived.size () > 0)
@@ -1202,8 +1202,8 @@ LteEnbMac::DoSchedDlConfigInd (FfMacSchedSapUser::SchedDlConfigIndParameters ind
       if (ind.m_buildDataList.at (i).m_dci.m_tbsSize.size () == 1)
         {
           DlSchedulingCallbackInfo dlSchedulingCallbackInfo;
-          dlSchedulingCallbackInfo.frameNo = m_frameNo;
-          dlSchedulingCallbackInfo.subframeNo = m_subframeNo;
+          dlSchedulingCallbackInfo.frameNo = m_dlSchedFrameNo;
+          dlSchedulingCallbackInfo.subframeNo = m_dlSchedSubframeNo;
           dlSchedulingCallbackInfo.rnti = ind.m_buildDataList.at (i).m_dci.m_rnti;
           dlSchedulingCallbackInfo.mcsTb1=ind.m_buildDataList.at (i).m_dci.m_mcs.at (0);
           dlSchedulingCallbackInfo.sizeTb1 = ind.m_buildDataList.at (i).m_dci.m_tbsSize.at (0);
@@ -1216,8 +1216,8 @@ LteEnbMac::DoSchedDlConfigInd (FfMacSchedSapUser::SchedDlConfigIndParameters ind
       else if (ind.m_buildDataList.at (i).m_dci.m_tbsSize.size () == 2)
         {
           DlSchedulingCallbackInfo dlSchedulingCallbackInfo;
-          dlSchedulingCallbackInfo.frameNo = m_frameNo;
-          dlSchedulingCallbackInfo.subframeNo = m_subframeNo;
+          dlSchedulingCallbackInfo.frameNo = m_dlSchedFrameNo;
+          dlSchedulingCallbackInfo.subframeNo = m_dlSchedSubframeNo;
           dlSchedulingCallbackInfo.rnti = ind.m_buildDataList.at (i).m_dci.m_rnti;
           dlSchedulingCallbackInfo.mcsTb1=ind.m_buildDataList.at (i).m_dci.m_mcs.at (0);
           dlSchedulingCallbackInfo.sizeTb1 = ind.m_buildDataList.at (i).m_dci.m_tbsSize.at (0);
@@ -1283,7 +1283,7 @@ LteEnbMac::DoSchedUlConfigInd (FfMacSchedSapUser::SchedUlConfigIndParameters ind
   // Fire the trace with the UL information
   for (  uint32_t i  = 0; i < ind.m_dciList.size (); i++ )
     {
-      m_ulScheduling (m_frameNo, m_subframeNo, ind.m_dciList.at (i).m_rnti,
+      m_ulScheduling (m_ulSchedFrameNo, m_ulSchedSubframeNo, ind.m_dciList.at (i).m_rnti,
                       ind.m_dciList.at (i).m_mcs, ind.m_dciList.at (i).m_tbSize, m_componentCarrierId);
     }
 
