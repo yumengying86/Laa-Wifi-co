@@ -433,6 +433,13 @@ LteSpectrumPhy::ChangeState (State newState)
 }
 
 
+bool
+LteSpectrumPhy::IsStateIdle (void)
+{
+  return (m_state == IDLE);
+}
+
+
 void
 LteSpectrumPhy::SetHarqPhyModule (Ptr<LteHarqPhy> harq)
 {

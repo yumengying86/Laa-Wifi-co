@@ -281,6 +281,7 @@ public:
   virtual void UlCqiReport (FfMacSchedSapProvider::SchedUlCqiInfoReqParameters ulcqi);
   virtual void UlInfoListElementHarqFeeback (UlInfoListElement_s params);
   virtual void DlInfoListElementHarqFeeback (DlInfoListElement_s params);
+  virtual bool IsThereData();
 
 private:
   LteEnbMac* m_mac; ///< the MAC
@@ -333,6 +334,12 @@ EnbMacMemberLteEnbPhySapUser::DlInfoListElementHarqFeeback (DlInfoListElement_s 
   m_mac->DoDlInfoListElementHarqFeeback (params);
 }
 
+bool
+EnbMacMemberLteEnbPhySapUser::IsThereData ()
+{
+  return m_mac->IsThereData ();
+}
+
 
 // //////////////////////////////////////
 // generic LteEnbMac methods
@@ -379,6 +386,10 @@ LteEnbMac::GetTypeId (void)
                    UintegerValue (0),
                    MakeUintegerAccessor (&LteEnbMac::m_componentCarrierId),
                    MakeUintegerChecker<uint8_t> (0,4))
+    .AddTraceSource ("DlHarqFeedback",
+                     "Harq feedback.",
+                     MakeTraceSourceAccessor (&LteEnbMac::m_dlHarqFeedback),
+                     "ns3::LteEnbMac::DlHarqFeedbackTracedCallback")
   ;
 
   return tid;
@@ -695,6 +706,12 @@ LteEnbMac::DoReceiveRachPreamble  (uint8_t rapId)
   NS_LOG_FUNCTION (this << (uint32_t) rapId);
   // just record that the preamble has been received; it will be processed later
   ++m_receivedRachPreambleCount[rapId]; // will create entry if not exists
+}
+
+bool
+LteEnbMac::IsThereData (void) const
+{
+  return m_cschedSapProvider->IsThereData ();
 }
 
 void

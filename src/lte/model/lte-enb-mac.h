@@ -40,6 +40,7 @@
 #include <ns3/packet.h>
 #include <ns3/packet-burst.h>
 #include <ns3/lte-ccm-mac-sap.h>
+#include <ns3/lte-channel-access-manager.h>
 
 namespace ns3 {
 
@@ -183,6 +184,13 @@ public:
   typedef void (* UlSchedulingTracedCallback)
     (const uint32_t frame, const uint32_t subframe, const uint16_t rnti,
      const uint8_t mcs, const uint16_t tbsSize);
+
+  /**
+   * TracedCallback signature for HARQ feedback updates.
+   * \param [in] vector of HARQ feedbacks
+   */
+  typedef void (* DlHarqFeedbackTracedCallback)
+    (std::vector<DlInfoListElement_s>);
   
 private:
 
@@ -344,6 +352,11 @@ private:
   */
   void DoReceiveRachPreamble (uint8_t prachId);
 
+  /**
+   * \brief Check the scheduler if there is data
+   */
+  bool IsThereData (void) const;
+
   // forwarded by LteCcmMacSapProvider
   /**
    * Report MAC CE to scheduler
@@ -439,6 +452,8 @@ private:
    */
   TracedCallback<uint32_t, uint32_t, uint16_t,
                  uint8_t, uint16_t, uint8_t> m_ulScheduling;
+
+  TracedCallback<std::vector<DlInfoListElement_s> > m_dlHarqFeedback; ///< Trace information for DL HARQ
   
   uint8_t m_macChTtiDelay; ///< delay of MAC, PHY and channel in terms of TTIs
 

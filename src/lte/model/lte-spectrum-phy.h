@@ -327,6 +327,13 @@ public:
    */
   void SetState (State newState);
 
+  /**
+   * Check if state is idle
+   *
+   * \return true if state is idle
+   */
+  bool IsStateIdle (void);
+
   /** 
    * 
    * 
