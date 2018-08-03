@@ -273,6 +273,11 @@ public:
    */
   virtual void CschedUeReleaseReq (const struct CschedUeReleaseReqParameters& params) = 0;
 
+  /**
+   * \brief Check the scheduler if there is data
+   */
+  virtual bool IsThereData(void) = 0;
+
 private:
 };
 
