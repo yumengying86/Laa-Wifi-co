@@ -627,16 +627,6 @@ LteEnbMac::DoSubframeIndication (uint32_t frameNo, uint32_t subframeNo)
       m_schedSapProvider->SchedUlCqiInfoReq (m_ulCqiReceived.at (i));
     }
     m_ulCqiReceived.clear ();
-  
-  // Send BSR reports to the scheduler
-  if (m_ulCeReceived.size () > 0)
-    {
-      FfMacSchedSapProvider::SchedUlMacCtrlInfoReqParameters ulMacReq;
-      ulMacReq.m_sfnSf = ((0x3FF & frameNo) << 4) | (0xF & subframeNo);
-      ulMacReq.m_macCeList.insert (ulMacReq.m_macCeList.begin (), m_ulCeReceived.begin (), m_ulCeReceived.end ());
-      m_ulCeReceived.erase (m_ulCeReceived.begin (), m_ulCeReceived.end ());
-      m_schedSapProvider->SchedUlMacCtrlInfoReq (ulMacReq);
-    }
 
 
   // Get uplink transmission opportunities
@@ -757,6 +747,17 @@ LteEnbMac::DoReportMacCeToScheduler (MacCeListElement_s bsr)
   //send to LteCcmMacSapUser
   m_ulCeReceived.push_back (bsr); // this to called when LteUlCcmSapProvider::ReportMacCeToScheduler is called
   NS_LOG_DEBUG (this << " bsr Size after push_back " << (uint16_t) m_ulCeReceived.size ());
+
+  // This bsr message needs to be forwarded to scheduled as soon as it arrives, it cannot wait that SubframeIndication is executed.
+  if (m_ulCeReceived.size () > 0)
+    {
+      FfMacSchedSapProvider::SchedUlMacCtrlInfoReqParameters ulMacReq;
+      // The frame and subframe number are currently not used by scheduler.
+      ulMacReq.m_sfnSf = 0;
+      ulMacReq.m_macCeList.insert (ulMacReq.m_macCeList.begin (), m_ulCeReceived.begin (), m_ulCeReceived.end ());
+      m_ulCeReceived.erase (m_ulCeReceived.begin (), m_ulCeReceived.end ());
+      m_schedSapProvider->SchedUlMacCtrlInfoReq (ulMacReq);
+    }
 }
 
 
