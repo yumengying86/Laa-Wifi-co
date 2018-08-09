@@ -34,11 +34,11 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_indoor_${simTag}_operatorA
+            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
-            imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
+            imgTag="simple_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Udp`
             if [ $cell == 'Laa' ] ; then
                 TITLE="EdThresh=${energyDetection}, FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
@@ -48,7 +48,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
-                CURRENT=results/laa_wifi_indoor_${simTag}_operator${OPERATOR}
+                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -86,11 +86,11 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_indoor_${simTag}_operatorA
+            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
-            imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
+            imgTag="simple_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Udp`
             if [ $cell == 'Laa' ] ; then
                 TITLE="EdThresh=${energyDetection}, FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
@@ -100,7 +100,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
-                CURRENT=results/laa_wifi_indoor_${simTag}_operator${OPERATOR}
+                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -139,11 +139,11 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_indoor_${simTag}_operatorA
+            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
-            imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
+            imgTag="simple_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Udp`
             if [ $cell == 'Laa' ] ; then
                 TITLE="EdThresh=${energyDetection}, FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
@@ -152,7 +152,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             fi
             for OPERATOR in A B ; do
                 THROUGHPUT_COLUMN=8
-                CURRENT=results/laa_wifi_indoor_${simTag}_operator${OPERATOR}
+                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $THROUGHPUT_COLUMN $CURRENT > results/cdf_throughput_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -190,11 +190,11 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_indoor_${simTag}_operatorB_voice_log
+            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorB_voice_log
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
-            imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
+            imgTag="simple_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Udp`
             if [ $cell == 'Laa' ] ; then
                 TITLE="EdThresh=${energyDetection}, FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
@@ -204,7 +204,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in B ; do
                 LATENCY_COLUMN=4
-                CURRENT=results/laa_wifi_indoor_${simTag}_operator${OPERATOR}_voice_log
+                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}_voice_log
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_voice_latency_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -233,5 +233,5 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     done
 done
 
-../utils/shot_thumbnails.sh $IMGDIR/thumbnails "laa-wifi-indoor-ftp Laa txop=${lbtTxop} results"
+../utils/shot_thumbnails.sh $IMGDIR/thumbnails "laa-wifi-simple-ftp Laa txop=${lbtTxop} results"
 
