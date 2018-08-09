@@ -59,7 +59,7 @@ cd ../../../../
 # Random number generator seed
 RngRun=1
 # Which node number in the scenario to enable logging on
-# logNodeId=1
+logNodeId=1
 # Transport protocol (Ftp, Tcp, or Udp).  Udp corresponds to full buffer.
 transport=Ftp
 # TXOP duration (ms) for LAA
@@ -72,18 +72,29 @@ wifiQueueMaxSize=2000p
 laaTxMode=2
 
 # Run Wifi and LAA both with energy detection -72.0 (no effect on Wi-Fi)
-# for ftpLambda in 0.5 1.5 2.5 ; do
-for ftpLambda in 0.5 ; do
+for ftpLambda in 0.5 1.5 2.5 ; do
 # Energy detection threshold for LAA
     for energyDetection in -72.0 ; do
-        for cell in Wifi ; do
+        for cell in Wifi Laa ; do
             # Make the simulation duration inversly proportional to ftpLambda
             duration=$(echo "$base_duration/$ftpLambda" | bc)
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             /usr/bin/time -f '%e %U %S %K %M %x %C' -o "${outputDir}"/time_stats -a \
-            ./waf --run lte-wifi-simple --command="%s --cellConfigA=${cell} --cellConfigB=Wifi --lbtTxop=${lbtTxop} --logWifiRetries=1 --logWifiFailRetries=1 --logPhyArrivals=1 --transport=${transport} --ftpLambda=${ftpLambda} --duration=${duration} --logHarqFeedback=1 --logTxops=1 --logCwChanges=1 --logBackoffChanges=1 --laaEdThreshold=${energyDetection} --simTag=${simTag} --outputDir=${outputDir} --wifiQueueMaxSize=${wifiQueueMaxSize} --ns3::LteEnbRrc::DefaultTransmissionMode=${laaTxMode} --RngRun=${RngRun}"
-            #original
-            # ./waf --run lte-wifi-simple --command="%s --cellConfigA=${cell} --cellConfigB=Wifi --lbtTxop=${lbtTxop} --logWifiRetries=1 --logWifiFailRetries=1 --logPhyArrivals=1 --logPhyNodeId=${logNodeId} --transport=${transport} --ftpLambda=${ftpLambda} --duration=${duration} --cwUpdateRule=nacks80 --logHarqFeedback=1 --logTxops=1 --logCwChanges=1 --logBackoffChanges=1 --laaEdThreshold=${energyDetection} --simTag=${simTag} --outputDir=${outputDir} --wifiQueueMaxSize=${wifiQueueMaxSize} --voiceEnabled=${voiceEnabled} --ns3::LteEnbRrc::DefaultTransmissionMode=${laaTxMode} --RngRun=${RngRun}"
+            ./waf --run lte-wifi-simple --command="%s --cellConfigA=${cell} --cellConfigB=Wifi --lbtTxop=${lbtTxop} --logWifiRetries=1 --logWifiFailRetries=1 --logPhyArrivals=1 --logPhyNodeId=${logNodeId} --transport=${transport} --ftpLambda=${ftpLambda} --duration=${duration} --cwUpdateRule=nacks80 --logHarqFeedback=1 --logTxops=1 --logCwChanges=1 --logBackoffChanges=1 --laaEdThreshold=${energyDetection} --simTag=${simTag} --outputDir=${outputDir} --wifiQueueMaxSize=${wifiQueueMaxSize} --ns3::LteEnbRrc::DefaultTransmissionMode=${laaTxMode} --RngRun=${RngRun}"
+        done
+    done
+done
+
+# Continue with LAA for energy detection -62.0 and -82.0
+for ftpLambda in 0.5 1.5 2.5 ; do
+# Energy detection threshold for LAA
+    for energyDetection in -62.0 -82.0 ; do
+        for cell in Laa ; do
+            # Make the simulation duration inversly proportional to ftpLambda
+            duration=$(echo "$base_duration/$ftpLambda" | bc)
+            simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
+            /usr/bin/time -f '%e %U %S %K %M %x %C' -o "${outputDir}"/time_stats -a \
+            ./waf --run lte-wifi-simple --command="%s --cellConfigA=${cell} --cellConfigB=Wifi --lbtTxop=${lbtTxop} --logWifiRetries=1 --logWifiFailRetries=1 --logPhyArrivals=1 --logPhyNodeId=${logNodeId} --transport=${transport} --ftpLambda=${ftpLambda} --duration=${duration} --cwUpdateRule=nacks80 --logHarqFeedback=1 --logTxops=1 --logCwChanges=1 --logBackoffChanges=1 --laaEdThreshold=${energyDetection} --simTag=${simTag} --outputDir=${outputDir} --wifiQueueMaxSize=${wifiQueueMaxSize} --ns3::LteEnbRrc::DefaultTransmissionMode=${laaTxMode} --RngRun=${RngRun}"
         done
     done
 done
