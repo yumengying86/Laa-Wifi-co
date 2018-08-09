@@ -391,11 +391,14 @@ MacAddressToNode (Mac48Address address)
         {
           nd = n->GetDevice (j);
           Address a = nd->GetAddress ();
-          Mac48Address mac = Mac48Address::ConvertFrom (a);
-          if (address == mac)
+          if (a.GetLength () == 6) // Ugly temp fix
             {
-              NS_LOG_DEBUG ("Found node " << n->GetId () << " for address " << address);
-              return n;
+              Mac48Address mac = Mac48Address::ConvertFrom (a);
+              if (address == mac)
+                {
+                  NS_LOG_DEBUG ("Found node " << n->GetId () << " for address " << address);
+                  return n;
+                }
             }
         }
     }
