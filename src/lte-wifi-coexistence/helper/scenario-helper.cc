@@ -42,9 +42,7 @@
 #include <ns3/mobility-module.h>
 #include <ns3/laa-wifi-coexistence-helper.h>
 #include <ns3/ff-mac-common.h>
-#if 0
 #include <ns3/lbt-access-manager.h>
-#endif
 
 #ifndef UINT32_MAX
 #define UINT32_MAX 4294967295U
@@ -333,11 +331,9 @@ CtrlSignalToString (std::list<Ptr<LteControlMessage> > ctrlMsg)
           tempString="SIB1";
           break;
 
-#if 0
         case LteControlMessage::DRS:
           tempString="DRS";
           break;
-#endif
 
         case LteControlMessage::DL_DCI:
           tempString="DL_DCI";
@@ -805,49 +801,41 @@ ReservationSignalTraceReceived (std::string context, Time startTime, Time durati
 void
 CwChangeConnect (Ptr<NetDevice> lteEnbNetDevice)
 {
-#if 0
   Ptr<LbtAccessManager> lbtAccessManager = DynamicCast<LbtAccessManager>(lteEnbNetDevice->GetObject<LteEnbNetDevice>()->GetPhy()->GetChannelAccessManager());
   NS_ASSERT_MSG(lbtAccessManager!=0, "LbtAccessManager does not exist");
   std::string context = NodeIdToContext (lteEnbNetDevice->GetNode ()->GetId ());
   bool success = lbtAccessManager->TraceConnect("Cw", context, MakeCallback(&CwChangeCb));
   NS_ASSERT (success);
-#endif
 }
 
 void
 CwChangeDisconnect (Ptr<NetDevice> lteEnbNetDevice)
 {
-#if 0
   Ptr<LbtAccessManager> lbtAccessManager = DynamicCast<LbtAccessManager>(lteEnbNetDevice->GetObject<LteEnbNetDevice>()->GetPhy()->GetChannelAccessManager());
   NS_ASSERT_MSG(lbtAccessManager!=0, "LbtAccessManager does not exist");
   std::string context = NodeIdToContext (lteEnbNetDevice->GetNode ()->GetId ());
   bool success = lbtAccessManager->TraceDisconnect("Cw", context, MakeCallback(&CwChangeCb));
   NS_ASSERT (success);
-#endif
 }
 
 void
 BackoffChangeConnect (Ptr<NetDevice> lteEnbNetDevice)
 {
-#if 0
   Ptr<LbtAccessManager> lbtAccessManager = DynamicCast<LbtAccessManager>(lteEnbNetDevice->GetObject<LteEnbNetDevice>()->GetPhy()->GetChannelAccessManager());
   NS_ASSERT_MSG(lbtAccessManager!=0, "LbtAccessManager does not exist");
   std::string context = NodeIdToContext (lteEnbNetDevice->GetNode ()->GetId ());
   bool success = lbtAccessManager->TraceConnect("Backoff", context, MakeCallback(&BackoffChangeCb));
   NS_ASSERT (success);
-#endif
 }
 
 void
 BackoffChangeDisconnect (Ptr<NetDevice> lteEnbNetDevice)
 {
-#if 0
   Ptr<LbtAccessManager> lbtAccessManager = DynamicCast<LbtAccessManager>(lteEnbNetDevice->GetObject<LteEnbNetDevice>()->GetPhy()->GetChannelAccessManager());
   NS_ASSERT_MSG(lbtAccessManager!=0, "LbtAccessManager does not exist");
   std::string context = NodeIdToContext (lteEnbNetDevice->GetNode ()->GetId ());
   bool success = lbtAccessManager->TraceDisconnect("Backoff", context, MakeCallback(&BackoffChangeCb));
   NS_ASSERT (success);
-#endif
 }
 
 void
@@ -1834,14 +1822,12 @@ ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
   ueDevices = lteHelper->InstallUeDevice (ueNodes);
 
   // additional eNB-specific configuration
-#if 0
   for (uint32_t n = 0; n < bsDevices.GetN (); ++n)
     {
       Ptr<NetDevice> enbDevice = bsDevices.Get (n);
       Ptr<LteEnbNetDevice> enbLteDevice = enbDevice->GetObject<LteEnbNetDevice> ();
       enbLteDevice->GetRrc ()->SetAbsPattern (absPattern);
     }
-#endif
 
   NetDeviceContainer ueLteDevs (ueDevices);
 
@@ -1868,12 +1854,10 @@ ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
       ueStaticRouting->SetDefaultRoute (epcHelper->GetUeDefaultGatewayAddress (), 1);
 
       // set up SINR monitoring
-#if 0
       Ptr<LtePhy> uePhy = ueLteDevice->GetPhy ()->GetObject<LtePhy> ();
       Ptr<LteAverageChunkProcessor> monitorLteChunkProcessor  = Create<LteAverageChunkProcessor> ();
       monitorLteChunkProcessor->AddCallback (MakeCallback (&LteSpectrumValueCatcher::ReportValue, &lteDlSinrCatcherVector.at (u)));
       uePhy->GetDownlinkSpectrumPhy ()->AddDataSinrChunkProcessor (monitorLteChunkProcessor);
-#endif
     }
 
   // instruct all devices to attach using the LTE initial cell selection procedure
@@ -1963,7 +1947,6 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
      }*/
 
   // Check if we need to instantiate LaaWifiCoexistence helper
-#if 0
   if (GlobalValue::GetValueByNameFailSafe ("ChannelAccessManager", enumValue))
     {
       enum Config_ChannelAccessManager channelAccessManager = (Config_ChannelAccessManager) enumValue.Get ();
@@ -1978,7 +1961,6 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
           //Simulator::Schedule (lbtChannelAccessManagerInstallTime, &LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, laaWifiCoexistenceHelper, bsDevices, phyParams);
         }
     }
-#endif
 
   // if there are ue devices configure and  attach them
   if (ueDevices.GetN () != 0)
@@ -2006,12 +1988,10 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
           ueStaticRouting->SetDefaultRoute (epcHelper->GetUeDefaultGatewayAddress (), 1);
 
           // set up SINR monitoring
-#if 0
           Ptr<LtePhy> uePhy = ueLteDevice->GetPhy ()->GetObject<LtePhy> ();
           Ptr<LteAverageChunkProcessor> monitorLteChunkProcessor  = Create<LteAverageChunkProcessor> ();
           monitorLteChunkProcessor->AddCallback (MakeCallback (&LteSpectrumValueCatcher::ReportValue, &lteDlSinrCatcherVector.at (u)));
           uePhy->GetDownlinkSpectrumPhy ()->AddDataSinrChunkProcessor (monitorLteChunkProcessor);
-#endif
         }
       // instruct all devices to attach using the LTE initial cell selection procedure
       lteHelper->Attach (ueDevices);
@@ -2378,7 +2358,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   Config::SetDefault ("ns3::LteSpectrumPhy::CtrlErrorModelEnabled", BooleanValue (false));
   Config::SetDefault ("ns3::LteSpectrumPhy::DataErrorModelEnabled", BooleanValue (true));
 
-#if 0
   Config::SetDefault ("ns3::LteEnbPhy::ChannelAccessManagerStartTime", TimeValue (lbtChannelAccessManagerInstallTime));
   // defines a time until which mibs and sibs will be generated and transmitted, after that time no mibs/sibs ctrl messages will be generated
   GlobalValue::GetValueByName ("disableMibAndSibStartupTime", doubleValue);
@@ -2397,7 +2376,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // in situation when packets are ready, but no channel access, whether to drop packets, used only with impl2 (lteChannelAccessImpl = false)
   GlobalValue::GetValueByName ("dropPackets", booleanValue);
   Config::SetDefault ("ns3::LteEnbPhy::DropPackets", booleanValue);
-#endif
 
 
   GlobalValue::GetValueByName("rlcAmRbsTimer", uValue);

@@ -25,6 +25,7 @@
 #include "ns3/assert.h"
 #include "ns3/log.h"
 #include "ns3/spectrum-wifi-phy.h"
+#include "ns3/wifi-phy-listener.h"
 
 namespace ns3 {
 
@@ -36,7 +37,7 @@ NS_OBJECT_ENSURE_REGISTERED (LbtAccessManager);
 /**
  * Listener for PHY events. Forwards to lbtaccessmanager
  */
-class LbtPhyListener : public ns3::WifiPhyListener
+class LbtPhyListener : public WifiPhyListener
 {
 public:
   /**
@@ -52,101 +53,62 @@ public:
   {
   }
 
-  virtual void NotifyRxStart (Time duration)
+  void NotifyRxStart (Time duration)
   {
     NS_LOG_FUNCTION (this << duration);
     m_lbtAccessManager->NotifyRxStartNow (duration);
   }
-  virtual void NotifyRxEndOk (void)
+  void NotifyRxEndOk (void)
   {
     m_lbtAccessManager->NotifyRxEndOkNow ();
   }
-  virtual void NotifyRxEndError (void)
+  void NotifyRxEndError (void)
   {
     m_lbtAccessManager->NotifyRxEndErrorNow ();
   }
-  virtual void NotifyTxStart (Time duration, double txPowerDbm)
+  void NotifyTxStart (Time duration, double txPowerDbm)
   {
     NS_LOG_FUNCTION (this << duration << txPowerDbm);
     m_lbtAccessManager->NotifyTxStartNow (duration);
   }
-  virtual void NotifyMaybeCcaBusyStart (Time duration)
+  void NotifyMaybeCcaBusyStart (Time duration)
   {
     NS_LOG_FUNCTION (this << duration);
     m_lbtAccessManager->NotifyMaybeCcaBusyStartNow (duration);
   }
-  virtual void NotifySwitchingStart (Time duration)
+  void NotifySwitchingStart (Time duration)
   {
     NS_LOG_FUNCTION (this << duration);
     m_lbtAccessManager->NotifySwitchingStartNow (duration);
   }
-  virtual void NotifySleep (void)
+  void NotifySleep (void)
   {
     m_lbtAccessManager->NotifySleepNow ();
   }
-  virtual void NotifyWakeup (void)
+  void NotifyOff (void)
+  {
+    m_lbtAccessManager->NotifyOffNow ();
+  }
+  void NotifyWakeup (void)
   {
     m_lbtAccessManager->NotifyWakeupNow ();
   }
+  void NotifyOn (void)
+  {
+    m_lbtAccessManager->NotifyOnNow ();
+  }
 
 private:
-  ns3::LbtAccessManager *m_lbtAccessManager;  //!< DcfManager to forward events to
+  LbtAccessManager *m_lbtAccessManager;  //!< DcfManager to forward events to
 };
-
-/**
- * Listener for NAV events. Forwards to LbtAccessManager
- */
-class LbtMacLowListener : public ns3::MacLowDcfListener
-{
-public:
-  /**
-   * Create a LowDcfListener for the given DcfManager.
-   *
-   * \param dcf
-   */
-  LbtMacLowListener (ns3::LbtAccessManager *dcf)
-    : m_lbtAccessManager (dcf)
-  {
-  }
-  virtual ~LbtMacLowListener ()
-  {
-  }
-  virtual void NavStart (Time duration)
-  {
-    m_lbtAccessManager->NotifyNavStartNow (duration);
-  }
-  virtual void NavReset (Time duration)
-  {
-    m_lbtAccessManager->NotifyNavResetNow (duration);
-  }
-  virtual void AckTimeoutStart (Time duration)
-  {
-    m_lbtAccessManager->NotifyAckTimeoutStartNow (duration);
-  }
-  virtual void AckTimeoutReset ()
-  {
-    m_lbtAccessManager->NotifyAckTimeoutResetNow ();
-  }
-  virtual void CtsTimeoutStart (Time duration)
-  {
-    m_lbtAccessManager->NotifyCtsTimeoutStartNow (duration);
-  }
-  virtual void CtsTimeoutReset ()
-  {
-    m_lbtAccessManager->NotifyCtsTimeoutResetNow ();
-  }
-private:
-  ns3::LbtAccessManager *m_lbtAccessManager;    //!< DcfManager to forward events to
-};
-
 
 
 TypeId
 LbtAccessManager::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::LbtAccessManager")
-    .SetParent<ChannelAccessManager> ()
-    .SetGroupName ("laa-wifi-coexistence")
+    .SetParent<LteChannelAccessManager> ()
+    .SetGroupName ("lte-wifi-coexistence")
     .AddAttribute ("Slot", "The duration of a Slot.",
                    TimeValue (MicroSeconds (9)),
                    MakeTimeAccessor (&LbtAccessManager::m_slotTime),
@@ -204,9 +166,8 @@ LbtAccessManager::GetTypeId (void)
 
 
 LbtAccessManager::LbtAccessManager ()
-  : ChannelAccessManager (),
+  : LteChannelAccessManager (),
     m_lbtPhyListener (0),
-    m_lbtMacLowListener (0),
     m_state (IDLE),
     m_currentBackoffSlots (0),
     m_backoffCount (0),
@@ -224,9 +185,7 @@ LbtAccessManager::~LbtAccessManager ()
   NS_LOG_FUNCTION (this);
   // TODO Auto-generated destructor stub
   delete m_lbtPhyListener;
-  delete m_lbtMacLowListener;
   m_lbtPhyListener = 0;
-  m_lbtMacLowListener = 0;
   if (m_waitForDeferEventId.IsRunning ())
     {
       m_waitForDeferEventId.Cancel ();
@@ -261,18 +220,6 @@ LbtAccessManager::SetupPhyListener (Ptr<SpectrumWifiPhy> phy)
     }
   m_lbtPhyListener = new LbtPhyListener (this);
   phy->RegisterListener (m_lbtPhyListener);
-}
-
-void
-LbtAccessManager::SetupLowListener (Ptr<MacLow> low)
-{
-  NS_LOG_FUNCTION (this << low);
-  if (m_lbtMacLowListener != 0)
-    {
-      delete m_lbtMacLowListener;
-    }
-  m_lbtMacLowListener = new LbtMacLowListener (this);
-  low->RegisterDcfListener (m_lbtMacLowListener);
 }
 
 void
@@ -580,42 +527,14 @@ LbtAccessManager::NotifySleepNow ()
 }
 
 void
-LbtAccessManager::NotifyNavStartNow (Time duration)
-{
-  NS_LOG_FUNCTION (this << duration.GetSeconds ());
-  NS_FATAL_ERROR ("Unimplemented");
-}
-
-void
-LbtAccessManager::NotifyNavResetNow (Time duration)
-{
-  NS_LOG_FUNCTION (this << duration.GetSeconds ());
-  NS_FATAL_ERROR ("Unimplemented");
-}
-
-void
-LbtAccessManager::NotifyAckTimeoutStartNow (Time duration)
-{
-  NS_LOG_FUNCTION (this << duration.GetSeconds ());
-  NS_FATAL_ERROR ("Unimplemented");
-}
-
-void
-LbtAccessManager::NotifyAckTimeoutResetNow ()
+LbtAccessManager::NotifyOffNow ()
 {
   NS_LOG_FUNCTION (this);
   NS_FATAL_ERROR ("Unimplemented");
 }
 
 void
-LbtAccessManager::NotifyCtsTimeoutStartNow (Time duration)
-{
-  NS_LOG_FUNCTION (this << duration.GetSeconds ());
-  NS_FATAL_ERROR ("Unimplemented");
-}
-
-void
-LbtAccessManager::NotifyCtsTimeoutResetNow ()
+LbtAccessManager::NotifyOnNow ()
 {
   NS_LOG_FUNCTION (this);
   NS_FATAL_ERROR ("Unimplemented");
@@ -641,9 +560,9 @@ LbtAccessManager::UpdateFailedCw (void)
 
 void LbtAccessManager::SetGrant()
 {
-   NS_LOG_DEBUG ("Granting access through ChannelAccessManager at time " << Simulator::Now ().GetMicroSeconds ());
-   ChannelAccessManager::SetGrantDuration (m_txop);
-   ChannelAccessManager::DoRequestAccess ();
+   NS_LOG_DEBUG ("Granting access through LteChannelAccessManager at time " << Simulator::Now ().GetMicroSeconds ());
+   LteChannelAccessManager::SetGrantDuration (m_txop);
+   LteChannelAccessManager::DoRequestAccess ();
    SetLbtState (TXOP_GRANTED);
    m_grantRequested = false;
 

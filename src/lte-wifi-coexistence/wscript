@@ -11,9 +11,9 @@ def build(bld):
     module.source = [
         'helper/laa-wifi-coexistence-helper.cc',
         'helper/scenario-helper.cc',
-        # 'model/basic-lbt-access-manager.cc',
-        # 'model/duty-cycle-access-manager.cc',
-        # 'model/lbt-access-manager.cc',
+        'model/basic-lbt-access-manager.cc',
+        'model/duty-cycle-access-manager.cc',
+        'model/lbt-access-manager.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('lte-wifi-coexistence')
@@ -31,9 +31,9 @@ def build(bld):
     headers.source = [
         'helper/laa-wifi-coexistence-helper.h',
         'helper/scenario-helper.h',
-        # 'model/basic-lbt-access-manager.h',
-        # 'model/duty-cycle-access-manager.h',
-        # 'model/lbt-access-manager.h',
+        'model/basic-lbt-access-manager.h',
+        'model/duty-cycle-access-manager.h',
+        'model/lbt-access-manager.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:

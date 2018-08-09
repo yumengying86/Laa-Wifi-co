@@ -35,7 +35,7 @@ TypeId
 DutyCycleAccessManager::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::DutyCycleAccessManager")
-    .SetParent<ChannelAccessManager> ()
+    .SetParent<LteChannelAccessManager> ()
     .SetGroupName ("lte")
     .AddConstructor<DutyCycleAccessManager> ()
     .AddAttribute ("OnDuration",

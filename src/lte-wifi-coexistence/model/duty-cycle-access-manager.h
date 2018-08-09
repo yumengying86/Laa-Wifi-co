@@ -22,7 +22,7 @@
 #include <ns3/object.h>
 #include <ns3/nstime.h>
 #include <ns3/callback.h>
-#include "ns3/channel-access-manager.h"
+#include "ns3/lte-channel-access-manager.h"
 
 #ifndef DUTYCYCLEACCESSMANAGER_H_
 #define DUTYCYCLEACCESSMANAGER_H_
@@ -40,7 +40,7 @@ namespace ns3 {
  *  but that ON periods do not overlap. The precision of this duty cycle is at nano seconds
  *  level.
  */
-class DutyCycleAccessManager : public ChannelAccessManager
+class DutyCycleAccessManager : public LteChannelAccessManager
 {
 
 public:

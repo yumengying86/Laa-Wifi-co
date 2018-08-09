@@ -35,11 +35,9 @@
 #include <ns3/propagation-module.h>
 #include <ns3/config-store-module.h>
 #include <ns3/flow-monitor-module.h>
-#if 0
 #include <ns3/basic-lbt-access-manager.h>
 #include <ns3/duty-cycle-access-manager.h>
 #include <ns3/lbt-access-manager.h>
-#endif
 
 namespace ns3 {
 
@@ -63,7 +61,7 @@ LaaWifiCoexistenceHelper::GetTypeId (void)
 
   static TypeId tid = TypeId ("ns3::LaaWifiCoexistenceHelper")
     .SetParent<Object> ()
-    .SetGroupName ("laa-wifi-coexistence")
+    .SetGroupName ("lte-wifi-coexistence")
     .AddAttribute ("ChannelAccessManagerType",
                    "The type of channel access manager to be used for eNBs. "
                    "The allowed values for this attributes are the type names "
@@ -125,8 +123,7 @@ LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevic
       spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
       spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
       spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
-      spectrumPhy.Set ("Receivers", UintegerValue (2));
-      spectrumPhy.Set ("Transmitters", UintegerValue (2));
+      spectrumPhy.Set ("Antennas", UintegerValue (2));
 
       wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
       //which implements a Wi-Fi MAC that does not perform any kind of beacon generation, probing, or association
@@ -145,7 +142,6 @@ LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevic
       Ptr<LteEnbPhy> ltePhy = (*i)->GetObject<LteEnbNetDevice> ()->GetPhy ();
       Ptr<LteEnbMac> lteMac = (*i)->GetObject<LteEnbNetDevice> ()->GetMac ();
 
-#if 0
       if (m_channelAccessManagerFactory.GetTypeId ().GetName () == "ns3::BasicLbtAccessManager")
         {
           Ptr<BasicLbtAccessManager> basicLbtAccessManager = m_channelAccessManagerFactory.Create<BasicLbtAccessManager> ();
@@ -169,7 +165,6 @@ LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevic
       }
       // set callbacks
       //wifiPhy->TraceConnectWithoutContext ("PhyRxBegin", MakeCallback (&ns3::LaaWifiCoexistenceHelper::WifiRxBegin, this));
-#endif
     }
 }
 

@@ -25,7 +25,7 @@
 #include "ns3/wifi-mac.h"
 #include "ns3/mac-low.h"
 
-#include "ns3/channel-access-manager.h"
+#include "ns3/lte-channel-access-manager.h"
 #include "ns3/lbt-access-manager.h"
 
 #ifndef BASIC_LBT_ACCESS_MANAGER_H_

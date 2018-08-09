@@ -263,9 +263,7 @@
 #include <ns3/propagation-module.h>
 #include <ns3/scenario-helper.h>
 #include <ns3/laa-wifi-coexistence-helper.h>
-#if 0
 #include <ns3/lbt-access-manager.h>
-#endif
 
 using namespace ns3;
 
@@ -361,7 +359,6 @@ static ns3::GlobalValue g_outputDir ("outputDir",
                                      ns3::StringValue ("./"),
                                      ns3::MakeStringChecker ());
 
-#if 0
 static ns3::GlobalValue g_cwUpdateRule ("cwUpdateRule",
                                          "Rule that will be used to update contention window of LAA node",
                                          ns3::EnumValue (LbtAccessManager::NACKS_80_PERCENT),
@@ -369,7 +366,6 @@ static ns3::GlobalValue g_cwUpdateRule ("cwUpdateRule",
                                         		 	 	 	   ns3::LbtAccessManager::ANY_NACK, "any",
                                         		 	 	 	   ns3::LbtAccessManager::NACKS_10_PERCENT, "nacks10",
                                         		 	 	 	   ns3::LbtAccessManager::NACKS_80_PERCENT, "nacks80"));
-#endif
 
 // Higher lambda means faster arrival rate; values [0.5, 1, 1.5, 2, 2.5]
 // recommended
@@ -420,7 +416,6 @@ main (int argc, char *argv[])
   enum Config_e cellConfigB = (Config_e) enumValue.Get ();
   GlobalValue::GetValueByName ("duration", doubleValue);
   double duration = doubleValue.Get ();
-#if 0
   GlobalValue::GetValueByName ("ChannelAccessManager", enumValue);
   enum Config_ChannelAccessManager channelAccessManager = (Config_ChannelAccessManager) enumValue.Get ();
   GlobalValue::GetValueByName ("lbtTxop", doubleValue);
@@ -429,7 +424,6 @@ main (int argc, char *argv[])
   double laaEdThreshold = doubleValue.Get ();
   GlobalValue::GetValueByName ("useReservationSignal", booleanValue);
   bool useReservationSignal = booleanValue.Get ();
-#endif
   GlobalValue::GetValueByName ("transport", enumValue);
   enum Transport_e transport = (Transport_e) enumValue.Get ();
   GlobalValue::GetValueByName ("lteDutyCycle", doubleValue);
@@ -440,15 +434,12 @@ main (int argc, char *argv[])
   std::string simTag = stringValue.Get ();
   GlobalValue::GetValueByName ("outputDir", stringValue);
   std::string outputDir = stringValue.Get ();
-#if 0
   GlobalValue::GetValueByName ("cwUpdateRule", enumValue);
   enum  LbtAccessManager::CWUpdateRule_t cwUpdateRule = (LbtAccessManager::CWUpdateRule_t) enumValue.Get ();
-#endif
   GlobalValue::GetValueByName ("indoorLossModel", stringValue);
   std::string indoorLossModel = stringValue.Get ();
 
-#if 0
-  Config::SetDefault ("ns3::ChannelAccessManager::EnergyDetectionThreshold", DoubleValue (laaEdThreshold));
+  Config::SetDefault ("ns3::LteChannelAccessManager::EnergyDetectionThreshold", DoubleValue (laaEdThreshold));
   switch (channelAccessManager)
     {
     case Lbt:
@@ -467,7 +458,6 @@ main (int argc, char *argv[])
       //default LTE channel access manager will be used, LTE always transmits
       break;
     }
-#endif
 
   // When logging, use prefixes
   LogComponentEnableAll (LOG_PREFIX_TIME);
@@ -510,9 +500,7 @@ main (int argc, char *argv[])
   Config::SetDefault ("ns3::RadioEnvironmentMapHelper::Z", DoubleValue (1.5));
 
   // we want deterministic behavior in this simple scenario, so we disable shadowing
-#if 0
   Config::SetDefault ("ns3::Ieee80211axIndoorPropagationLossModel::Sigma", DoubleValue (0));
-#endif
 
   // Enable aggregation for AC_BE; see bug 2471 in tracker
   Config::SetDefault ("ns3::RegularWifiMac::BE_BlockAckThreshold", UintegerValue (2));
@@ -529,7 +517,6 @@ main (int argc, char *argv[])
   phyParams.m_ueTxPower = 18; // dBm
   phyParams.m_ueNoiseFigure = 9; // dB
 
-#if 0
   // calculate rx power corresponding to d2 for logging purposes
   // note: a separate propagation loss model instance is used, make
   // sure the settings are consistent with the ones used for the
@@ -546,14 +533,11 @@ main (int argc, char *argv[])
   double rxPowerDbmD2 = plm->CalcRxPower (txPowerFactors,
                                           bsNodesA.Get (0)->GetObject<MobilityModel> (),
                                           ueNodesB.Get (0)->GetObject<MobilityModel> ());
-#endif
 
   std::ostringstream simulationParams;
   simulationParams << d1 << " " << d2 << " "
-#if 0
                    << rxPowerDbmD1 << " "
                    << rxPowerDbmD2 << " "
-#endif
                    << lteDutyCycle << " ";
 
   ConfigureAndRunScenario (cellConfigA, cellConfigB, bsNodesA, bsNodesB, ueNodesA, ueNodesB, phyParams, durationTime, transport, indoorLossModel, disableApps, lteDutyCycle, generateRem, outputDir + "/laa_wifi_simple_" + simTag, simulationParams.str ());

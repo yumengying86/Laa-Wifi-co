@@ -28,15 +28,14 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 
-#include "ns3/dcf-manager.h"
+#include "ns3/channel-access-manager.h"
 #include "ns3/wifi-mac.h"
 #include "ns3/mac-low.h"
 #include "ns3/lte-enb-phy.h"
 #include "ns3/lte-enb-mac.h"
+#include "ns3/lte-channel-access-manager.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/ff-mac-common.h"
-
-#include <ns3/channel-access-manager.h>
 
 
 #ifndef LBTACCESSMANAGER_H_
@@ -46,11 +45,9 @@ namespace ns3 {
 
 class SpectrumWifiPhy;
 class WifiMac;
-class MacLow;
 class LbtPhyListener;
-class LbtMacLowListener;
 
-class LbtAccessManager : public ChannelAccessManager
+class LbtAccessManager : public LteChannelAccessManager
 {
 public:
   enum LbtState
@@ -84,7 +81,6 @@ public:
   */
   int64_t AssignStreams (int64_t stream);
   void SetupPhyListener (Ptr<SpectrumWifiPhy> phy);
-  void SetupLowListener (Ptr<MacLow> low);
   void SetWifiPhy (Ptr<SpectrumWifiPhy> phy);
   void SetLteEnbMac (Ptr<LteEnbMac> lteEnbMac);
   void SetLteEnbPhy (Ptr<LteEnbPhy> lteEnbPhy);
@@ -95,6 +91,8 @@ public:
   void NotifyMaybeCcaBusyStartNow (Time duration);
   void NotifySwitchingStartNow (Time duration);
   void NotifySleepNow ();
+  void NotifyOffNow ();
+  void NotifyOnNow ();
   void NotifyWakeupNow ();
   void NotifyNavStartNow (Time duration);
   void NotifyNavResetNow (Time duration);
@@ -125,7 +123,6 @@ private:
   Ptr<LteEnbPhy> m_lteEnbPhy;
   Ptr<SpectrumWifiPhy> m_wifiPhy;
   LbtPhyListener* m_lbtPhyListener;
-  LbtMacLowListener* m_lbtMacLowListener;
   CWUpdateRule_t m_cwUpdateRule;
   LbtState m_state;
   Time m_slotTime;
