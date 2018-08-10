@@ -390,9 +390,10 @@ MacAddressToNode (Mac48Address address)
       for (uint32_t j = 0; j < n->GetNDevices (); j++)
         {
           nd = n->GetDevice (j);
-          Address a = nd->GetAddress ();
-          if (a.GetLength () == 6) // Ugly temp fix
+          Ptr<WifiNetDevice> wnd = nd->GetObject<WifiNetDevice> ();
+          if (wnd != 0)
             {
+              Address a = wnd->GetAddress ();
               Mac48Address mac = Mac48Address::ConvertFrom (a);
               if (address == mac)
                 {
