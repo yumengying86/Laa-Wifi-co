@@ -18,12 +18,12 @@ def build(bld):
 
     module_test = bld.create_ns3_module_test_library('lte-wifi-coexistence')
     module_test.source = [
-        # 'test/test-lte-unlicensed-interference.cc',
-        # 'test/test-lte-interference-abs.cc',
-        # 'test/test-lte-duty-cycle.cc',
-        # 'test/lbt-access-manager-test.cc',
-        # 'test/lbt-access-manager-ed-threshold-test.cc',
-        # 'test/lbt-txop-test.cc',
+        'test/test-lte-unlicensed-interference.cc',
+        'test/test-lte-interference-abs.cc',
+        'test/test-lte-duty-cycle.cc',
+        'test/lbt-access-manager-test.cc',
+        'test/lbt-access-manager-ed-threshold-test.cc',
+        'test/lbt-txop-test.cc',
         ]
 
     headers = bld(features='ns3header')
