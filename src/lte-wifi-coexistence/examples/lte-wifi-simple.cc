@@ -267,7 +267,7 @@
 
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE ("LaaWifiCoexistenceSimple");
+NS_LOG_COMPONENT_DEFINE ("LteWifiCoexistenceSimple");
 
 // Global Values are used in place of command line arguments so that these
 // values may be managed in the ns-3 ConfigStore system.
@@ -540,7 +540,7 @@ main (int argc, char *argv[])
                    << rxPowerDbmD2 << " "
                    << lteDutyCycle << " ";
 
-  ConfigureAndRunScenario (cellConfigA, cellConfigB, bsNodesA, bsNodesB, ueNodesA, ueNodesB, phyParams, durationTime, transport, indoorLossModel, disableApps, lteDutyCycle, generateRem, outputDir + "/laa_wifi_simple_" + simTag, simulationParams.str ());
+  ConfigureAndRunScenario (cellConfigA, cellConfigB, bsNodesA, bsNodesB, ueNodesA, ueNodesB, phyParams, durationTime, transport, indoorLossModel, disableApps, lteDutyCycle, generateRem, outputDir + "/lte_wifi_simple_" + simTag, simulationParams.str ());
 
   return 0;
 }

@@ -34,7 +34,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
+            FILE_TO_TEST=results/lte_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
@@ -48,7 +48,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
-                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
+                CURRENT=results/lte_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -86,7 +86,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
+            FILE_TO_TEST=results/lte_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
@@ -100,7 +100,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
-                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
+                CURRENT=results/lte_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -139,7 +139,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorA
+            FILE_TO_TEST=results/lte_wifi_simple_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
@@ -152,7 +152,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             fi
             for OPERATOR in A B ; do
                 THROUGHPUT_COLUMN=8
-                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}
+                CURRENT=results/lte_wifi_simple_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $THROUGHPUT_COLUMN $CURRENT > results/cdf_throughput_${simTag}_${OPERATOR}`
             done
             index=0        
@@ -190,7 +190,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
         for cell in Wifi Laa ; do
             simTag="eD_${energyDetection}_ftpLambda_${ftpLambda}_cellA_${cell}"
             # Some variants may not be present; skip those cases
-            FILE_TO_TEST=results/laa_wifi_simple_${simTag}_operatorB_voice_log
+            FILE_TO_TEST=results/lte_wifi_simple_${simTag}_operatorB_voice_log
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
             fi 
@@ -204,7 +204,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
     
             for OPERATOR in B ; do
                 LATENCY_COLUMN=4
-                CURRENT=results/laa_wifi_simple_${simTag}_operator${OPERATOR}_voice_log
+                CURRENT=results/lte_wifi_simple_${simTag}_operator${OPERATOR}_voice_log
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_voice_latency_${simTag}_${OPERATOR}`
             done
             index=0        
