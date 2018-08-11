@@ -9,7 +9,7 @@
 def build(bld):
     module = bld.create_ns3_module('lte-wifi-coexistence', ['lte','spectrum', 'wifi', 'internet-apps', 'flow-monitor'])
     module.source = [
-        'helper/laa-wifi-coexistence-helper.cc',
+        'helper/lte-wifi-coexistence-helper.cc',
         'helper/scenario-helper.cc',
         'model/basic-lbt-access-manager.cc',
         'model/duty-cycle-access-manager.cc',
@@ -29,7 +29,7 @@ def build(bld):
     headers = bld(features='ns3header')
     headers.module = 'lte-wifi-coexistence'
     headers.source = [
-        'helper/laa-wifi-coexistence-helper.h',
+        'helper/lte-wifi-coexistence-helper.h',
         'helper/scenario-helper.h',
         'model/basic-lbt-access-manager.h',
         'model/duty-cycle-access-manager.h',

@@ -40,7 +40,7 @@
 #include <ns3/config-store-module.h>
 #include <ns3/flow-monitor-module.h>
 #include <ns3/mobility-module.h>
-#include <ns3/laa-wifi-coexistence-helper.h>
+#include <ns3/lte-wifi-coexistence-helper.h>
 #include <ns3/ff-mac-common.h>
 #include <ns3/lbt-access-manager.h>
 
@@ -1950,7 +1950,7 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
        enbLteDevice->GetRrc ()->SetAbsPattern (absPattern);
      }*/
 
-  // Check if we need to instantiate LaaWifiCoexistence helper
+  // Check if we need to instantiate LteWifiCoexistence helper
   if (GlobalValue::GetValueByNameFailSafe ("ChannelAccessManager", enumValue))
     {
       enum Config_ChannelAccessManager channelAccessManager = (Config_ChannelAccessManager) enumValue.Get ();
@@ -1960,9 +1960,9 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
           channelAccessManager == Lbt ||
           channelAccessManager == DutyCycle)
         {
-          Ptr<LaaWifiCoexistenceHelper> laaWifiCoexistenceHelper = CreateObject<LaaWifiCoexistenceHelper> ();
+          Ptr<LteWifiCoexistenceHelper> laaWifiCoexistenceHelper = CreateObject<LteWifiCoexistenceHelper> ();
           laaWifiCoexistenceHelper->ConfigureEnbDevicesForLbt (bsDevices, phyParams);
-          //Simulator::Schedule (lbtChannelAccessManagerInstallTime, &LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, laaWifiCoexistenceHelper, bsDevices, phyParams);
+          //Simulator::Schedule (lbtChannelAccessManagerInstallTime, &LteWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, laaWifiCoexistenceHelper, bsDevices, phyParams);
         }
     }
 

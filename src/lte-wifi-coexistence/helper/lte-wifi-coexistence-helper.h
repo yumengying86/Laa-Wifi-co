@@ -19,8 +19,8 @@
  * Authors: Biljana Bojovic <bbojovic@cttc.es> and Tom Henderson <tomh@tomh.org>
  */
 
-#ifndef LAA_WIFI_COEXISTENCE_HELPER_H
-#define LAA_WIFI_COEXISTENCE_HELPER_H
+#ifndef LTE_WIFI_COEXISTENCE_HELPER_H
+#define LTE_WIFI_COEXISTENCE_HELPER_H
 
 #include <ns3/object.h>
 #include <ns3/config.h>
@@ -46,24 +46,24 @@ enum Config_ChannelAccessManager
 /**
  * \ingroup lte
  *
- * This class gathers methods necessary for configuring the LAA/Wi-Fi 
+ * This class gathers methods necessary for configuring the LTE/Wi-Fi 
  * coexistance mode on a set of LTE eNodeB devices.
  * e.g configuring energy detection thresholds, configuring preamble 
  * detection thresholds, configuring a set of LteNetDevices for 
  * Listen Before Talk (LBT), configuring different backoff algorithms, etc.
  */
-class LaaWifiCoexistenceHelper : public Object
+class LteWifiCoexistenceHelper : public Object
 {
 public:
   /**
    * Constructor
    */
-  LaaWifiCoexistenceHelper ();
+  LteWifiCoexistenceHelper ();
 
   /**
    * Destructor
    */
-  ~LaaWifiCoexistenceHelper ();
+  ~LteWifiCoexistenceHelper ();
 
   /**
    *  Register this type.
@@ -86,8 +86,8 @@ public:
   std::string GetChannelAccessManagerType () const;
 
   /**
-   * Configures LTE eNb devices to work in laa-wifi coexistance mode.
-   * \param enbDevices The enbDevices to be configured in laa-wifi coexistence mode.
+   * Configures LTE eNb devices to work in lte-wifi coexistance mode.
+   * \param enbDevices The enbDevices to be configured in lte-wifi coexistence mode.
    * \param phyParams PhyParams to use in configuration
    */
   void ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevices, struct PhyParams phyParams);
@@ -104,7 +104,7 @@ private:
 
 }
 
-#endif // LAA_WIFI_COEXISTENCE_HELPER_H
+#endif // LTE_WIFI_COEXISTENCE_HELPER_H
 
 
 

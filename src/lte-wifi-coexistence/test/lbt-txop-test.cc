@@ -51,7 +51,7 @@
 #include "ns3/config-store-module.h"
 #include "ns3/flow-monitor-module.h"
 #include "ns3/mobility-module.h"
-#include "ns3/laa-wifi-coexistence-helper.h"
+#include "ns3/lte-wifi-coexistence-helper.h"
 #include "ns3/lbt-access-manager.h"
 #include "ns3/scenario-helper.h"
 
@@ -230,7 +230,7 @@ LbtTxopTestCase::DoRun (void)
   phyParams.m_ueTxPower = 18; // dBm
   phyParams.m_ueNoiseFigure = 9; // dB
 
-  Config::SetDefault ("ns3::LaaWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::LbtAccessManager"));
+  Config::SetDefault ("ns3::LteWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::LbtAccessManager"));
   Config::SetDefault ("ns3::LbtAccessManager::UseReservationSignal", BooleanValue(m_useReservationSignal));
   Config::SetDefault ("ns3::LbtAccessManager::Txop", TimeValue (MilliSeconds(m_txop)));
   // we want deterministic behavior in this simple scenario, so we disable shadowing
@@ -311,10 +311,10 @@ LbtTxopTestCase::DoRun (void)
   m_ltePhy = eNbDevice.Get(0)->GetObject<LteEnbNetDevice> ()->GetPhy ();
 
   ueDevice = lteHelper->InstallUeDevice (ueNode);
-  Ptr<LaaWifiCoexistenceHelper> laaWifiCoexistenceHelper = CreateObject<LaaWifiCoexistenceHelper> ();
+  Ptr<LteWifiCoexistenceHelper> lteWifiCoexistenceHelper = CreateObject<LteWifiCoexistenceHelper> ();
   // configure LAA node
-  //laaWifiCoexistenceHelper->ConfigureEnbDevicesForLbt(eNbDevice, phyParams);
-  Simulator::Schedule (MilliSeconds(300), &LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, laaWifiCoexistenceHelper, eNbDevice, phyParams);
+  //lteWifiCoexistenceHelper->ConfigureEnbDevicesForLbt(eNbDevice, phyParams);
+  Simulator::Schedule (MilliSeconds(300), &LteWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, lteWifiCoexistenceHelper, eNbDevice, phyParams);
 
   // configure monitor node
   // get LTE channel

@@ -19,7 +19,7 @@
  * Authors: Biljana Bojovic <bbojovic@cttc.es> and Tom Henderson <tomh@tomh.org>
  */
 
-#include <ns3/laa-wifi-coexistence-helper.h>
+#include <ns3/lte-wifi-coexistence-helper.h>
 #include <ns3/log.h>
 
 #include <ns3/lte-enb-net-device.h>
@@ -41,25 +41,25 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("LaaWifiCoexistenceHelper");
+NS_LOG_COMPONENT_DEFINE ("LteWifiCoexistenceHelper");
 
-NS_OBJECT_ENSURE_REGISTERED (LaaWifiCoexistenceHelper);
+NS_OBJECT_ENSURE_REGISTERED (LteWifiCoexistenceHelper);
 
-LaaWifiCoexistenceHelper::LaaWifiCoexistenceHelper ()
+LteWifiCoexistenceHelper::LteWifiCoexistenceHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
-LaaWifiCoexistenceHelper::~LaaWifiCoexistenceHelper ()
+LteWifiCoexistenceHelper::~LteWifiCoexistenceHelper ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 TypeId
-LaaWifiCoexistenceHelper::GetTypeId (void)
+LteWifiCoexistenceHelper::GetTypeId (void)
 {
 
-  static TypeId tid = TypeId ("ns3::LaaWifiCoexistenceHelper")
+  static TypeId tid = TypeId ("ns3::LteWifiCoexistenceHelper")
     .SetParent<Object> ()
     .SetGroupName ("lte-wifi-coexistence")
     .AddAttribute ("ChannelAccessManagerType",
@@ -68,15 +68,15 @@ LaaWifiCoexistenceHelper::GetTypeId (void)
                    "of any class inheriting from ns3::ChannelAccessManager. Default value"
                    "is ns3::ChannelAccessManager",
                    StringValue ("ns3::ChannelAccessManager"),
-                   MakeStringAccessor (&LaaWifiCoexistenceHelper::SetChannelAccessManagerType,
-                                       &LaaWifiCoexistenceHelper::GetChannelAccessManagerType),
+                   MakeStringAccessor (&LteWifiCoexistenceHelper::SetChannelAccessManagerType,
+                                       &LteWifiCoexistenceHelper::GetChannelAccessManagerType),
                    MakeStringChecker ());
   return tid;
 
 }
 
 void
-LaaWifiCoexistenceHelper::SetChannelAccessManagerType (std::string type)
+LteWifiCoexistenceHelper::SetChannelAccessManagerType (std::string type)
 {
   NS_LOG_FUNCTION (this << type);
   m_channelAccessManagerFactory = ObjectFactory ();
@@ -84,20 +84,20 @@ LaaWifiCoexistenceHelper::SetChannelAccessManagerType (std::string type)
 }
 
 std::string
-LaaWifiCoexistenceHelper::GetChannelAccessManagerType () const
+LteWifiCoexistenceHelper::GetChannelAccessManagerType () const
 {
   return m_channelAccessManagerFactory.GetTypeId ().GetName ();
 }
 
 void
-LaaWifiCoexistenceHelper::DoDispose ()
+LteWifiCoexistenceHelper::DoDispose ()
 {
   NS_LOG_FUNCTION (this);
   Object::DoDispose ();
 }
 
 void
-LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevices, struct PhyParams phyParams)
+LteWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevices, struct PhyParams phyParams)
 {
 
   NS_LOG_FUNCTION (this);
@@ -164,11 +164,11 @@ LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt (NetDeviceContainer enbDevic
          ltePhy->SetChannelAccessManager (dutyCycleAccessManager);
       }
       // set callbacks
-      //wifiPhy->TraceConnectWithoutContext ("PhyRxBegin", MakeCallback (&ns3::LaaWifiCoexistenceHelper::WifiRxBegin, this));
+      //wifiPhy->TraceConnectWithoutContext ("PhyRxBegin", MakeCallback (&ns3::LteWifiCoexistenceHelper::WifiRxBegin, this));
     }
 }
 
-void LaaWifiCoexistenceHelper::WifiRxBegin (Ptr< const Packet > packet)
+void LteWifiCoexistenceHelper::WifiRxBegin (Ptr< const Packet > packet)
 {
   NS_LOG_DEBUG ("Packet:" << packet->GetUid ());
 }

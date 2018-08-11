@@ -65,10 +65,10 @@
 //
 //  In general, the program can be configured at run-time by passing
 //  command-line arguments.  The command
-//  ./waf --run "laa-wifi-simple --help"
+//  ./waf --run "lte-wifi-simple --help"
 //  will display all of the available run-time help options, and in
 //  particular, the command
-//  ./waf --run "laa-wifi-simple --PrintGlobals" should
+//  ./waf --run "lte-wifi-simple --PrintGlobals" should
 //  display the following:
 //
 // Global values:
@@ -213,7 +213,7 @@
 //
 //  When run with no arguments, something like this will show:
 //
-//  ./waf --run "laa-wifi-simple"
+//  ./waf --run "lte-wifi-simple"
 //
 //
 //
@@ -262,7 +262,7 @@
 #include <ns3/flow-monitor-module.h>
 #include <ns3/propagation-module.h>
 #include <ns3/scenario-helper.h>
-#include <ns3/laa-wifi-coexistence-helper.h>
+#include <ns3/lte-wifi-coexistence-helper.h>
 #include <ns3/lbt-access-manager.h>
 
 using namespace ns3;
@@ -443,13 +443,13 @@ main (int argc, char *argv[])
   switch (channelAccessManager)
     {
     case Lbt:
-      Config::SetDefault ("ns3::LaaWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::LbtAccessManager"));
+      Config::SetDefault ("ns3::LteWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::LbtAccessManager"));
       Config::SetDefault ("ns3::LbtAccessManager::Txop", TimeValue (Seconds (lbtTxop/1000.0)));
       Config::SetDefault ("ns3::LbtAccessManager::UseReservationSignal", BooleanValue(useReservationSignal));
       Config::SetDefault ("ns3::LbtAccessManager::CwUpdateRule", EnumValue(cwUpdateRule));
       break;
     case DutyCycle:
-      Config::SetDefault ("ns3::LaaWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::DutyCycleAccessManager"));
+      Config::SetDefault ("ns3::LteWifiCoexistenceHelper::ChannelAccessManagerType", StringValue ("ns3::DutyCycleAccessManager"));
       Config::SetDefault ("ns3::DutyCycleAccessManager::OnDuration", TimeValue (MilliSeconds (60)));
       Config::SetDefault ("ns3::DutyCycleAccessManager::OnStartTime",TimeValue (MilliSeconds (0)));
       Config::SetDefault ("ns3::DutyCycleAccessManager::DutyCyclePeriod",TimeValue (MilliSeconds (80)));
@@ -490,7 +490,7 @@ main (int argc, char *argv[])
 
 
   // REM settings tuned to get a nice figure for this specific scenario
-  Config::SetDefault ("ns3::RadioEnvironmentMapHelper::OutputFile", StringValue ("laa-wifi-simple.rem"));
+  Config::SetDefault ("ns3::RadioEnvironmentMapHelper::OutputFile", StringValue ("lte-wifi-simple.rem"));
   Config::SetDefault ("ns3::RadioEnvironmentMapHelper::XMin", DoubleValue (-50));
   Config::SetDefault ("ns3::RadioEnvironmentMapHelper::XMax", DoubleValue (250));
   Config::SetDefault ("ns3::RadioEnvironmentMapHelper::YMin", DoubleValue (-50));
