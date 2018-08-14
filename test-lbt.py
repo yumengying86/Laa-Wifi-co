@@ -90,16 +90,16 @@ lte_tests = [
     ("lte-spectrum-value-helper")
 ]
 
-# os.chdir ("src/lte-wifi-coexistence/test")
-# return_code = subprocess.call(["bash", "test-simple-phy-duration.sh"], stdout=FNULL, stderr=subprocess.STDOUT)
-# if (return_code):
-#     print("FAIL: test-simple-phy-duration.sh")
-#     if (stop_on_error):
-#         exit(return_code)
-# else:
-#     print("PASS: test-simple-phy-duration.sh")
-# return_code_catcher |= return_code
-# os.chdir ("../../../")
+os.chdir ("src/lte-wifi-coexistence/test")
+return_code = subprocess.call(["bash", "test-simple-phy-duration.sh"], stdout=FNULL, stderr=subprocess.STDOUT)
+if (return_code):
+    print("FAIL: test-simple-phy-duration.sh")
+    if (stop_on_error):
+        exit(return_code)
+else:
+    print("PASS: test-simple-phy-duration.sh")
+return_code_catcher |= return_code
+os.chdir ("../../../")
 
 for test in lbt_tests:
     return_code = subprocess.call(["python", "test.py", "-s", test] + sys.argv[1:], stdout=FNULL, stderr=subprocess.STDOUT)
