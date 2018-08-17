@@ -37,7 +37,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             FILE_TO_TEST=results/lte_wifi_indoor_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
-            fi 
+            fi
             imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Tcp`
             if [ $cell == 'Laa' ] ; then
@@ -45,22 +45,22 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             else
                 TITLE="FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
             fi
-    
+
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
                 CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
-            index=0        
+            index=0
             for OPERATOR in A B ; do
                 FILES[$index]=results/cdf_latency_${simTag}_${OPERATOR}
-                YCOLS[$index]='($2)'    
+                YCOLS[$index]='($2)'
                 XCOLS[$index]='($1)'
                 LABELS[$index]=`print_operator_${cell,,}_wifi $OPERATOR`
-            
+
                 index=`expr $index + 1`
             done
-    
+
             PLOTTYPE="with linespoints"
             XLABEL="Latency [ms]"
             YLABEL="CDF"
@@ -68,7 +68,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             OPTIONS="$BASE_OPTIONS ; set key bottom right"
             IMGFILENAME="${imgTag}_latency"
             plot
-    
+
             unset FILES
             unset LABELS
             unset YCOLS
@@ -89,7 +89,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             FILE_TO_TEST=results/lte_wifi_indoor_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
-            fi 
+            fi
             imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Tcp`
             if [ $cell == 'Laa' ] ; then
@@ -97,22 +97,22 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             else
                 TITLE="FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
             fi
-    
+
             for OPERATOR in A B ; do
                 LATENCY_COLUMN=9
                 CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
             done
-            index=0        
+            index=0
             for OPERATOR in A B ; do
                 FILES[$index]=results/cdf_latency_${simTag}_${OPERATOR}
-                YCOLS[$index]='($2)'    
+                YCOLS[$index]='($2)'
                 XCOLS[$index]='($1)'
                 LABELS[$index]=`print_operator_${cell,,}_wifi $OPERATOR`
-            
+
                 index=`expr $index + 1`
             done
-    
+
             PLOTTYPE="with linespoints"
             XLABEL="Latency [ms]"
             YLABEL="CDF"
@@ -120,7 +120,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             OPTIONS="$BASE_OPTIONS ; set key bottom right"
             IMGFILENAME="${imgTag}_latency_hi_res"
             plot
-    
+
             unset FILES
             unset LABELS
             unset YCOLS
@@ -142,7 +142,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             FILE_TO_TEST=results/lte_wifi_indoor_${simTag}_operatorA
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
-            fi 
+            fi
             imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Tcp`
             if [ $cell == 'Laa' ] ; then
@@ -155,13 +155,13 @@ for ftpLambda in 0.5 1.5 2.5 ; do
                 CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
                 `../utils/cdf.sh $THROUGHPUT_COLUMN $CURRENT > results/cdf_throughput_${simTag}_${OPERATOR}`
             done
-            index=0        
+            index=0
             for OPERATOR in A B ; do
                 FILES[$index]=results/cdf_throughput_${simTag}_${OPERATOR}
-                YCOLS[$index]='($2)'    
+                YCOLS[$index]='($2)'
                 XCOLS[$index]='($1)'
                 LABELS[$index]=`print_operator_${cell,,}_wifi $OPERATOR`
-        
+
                 index=`expr $index + 1`
             done
 
@@ -193,7 +193,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             FILE_TO_TEST=results/lte_wifi_indoor_${simTag}_operatorB_voice_log
             if ! [ -f $FILE_TO_TEST ] ; then
                 continue
-            fi 
+            fi
             imgTag="indoor_"`echo "$energyDetection_${energyDetection}_ftpLambda_${ftpLambda}_${cell}" | tr '.' '_'`
             TRAFFIC=`print_traffic_model Tcp`
             if [ $cell == 'Laa' ] ; then
@@ -201,22 +201,22 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             else
                 TITLE="FtpLambda=${ftpLambda}, CellA=${cell}, ${TRAFFIC}"
             fi
-    
+
             for OPERATOR in B ; do
                 LATENCY_COLUMN=4
                 CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}_voice_log
                 `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_voice_latency_${simTag}_${OPERATOR}`
             done
-            index=0        
+            index=0
             for OPERATOR in B ; do
                 FILES[$index]=results/cdf_voice_latency_${simTag}_${OPERATOR}
-                YCOLS[$index]='($2)'    
+                YCOLS[$index]='($2)'
                 XCOLS[$index]='($1)'
                 LABELS[$index]=`print_operator_${cell,,}_wifi $OPERATOR`
-            
+
                 index=`expr $index + 1`
             done
-    
+
             PLOTTYPES[0]="with linespoints ls 2"
             XLABEL="Voice Latency [ms]"
             YLABEL="CDF"
@@ -224,7 +224,7 @@ for ftpLambda in 0.5 1.5 2.5 ; do
             OPTIONS="$BASE_OPTIONS ; set key bottom right"
             IMGFILENAME="${imgTag}_voice_latency"
             plot
-    
+
             unset FILES
             unset LABELS
             unset YCOLS
