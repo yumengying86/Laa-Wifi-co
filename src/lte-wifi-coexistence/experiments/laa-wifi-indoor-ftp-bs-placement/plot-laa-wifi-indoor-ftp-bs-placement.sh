@@ -46,37 +46,37 @@ for cwUpdateRule in ${cwUpdateRules} ; do
 for lbtTxop in ${lbtTxopList} ; do
 for ftpLambda in ${ftpLambdas} ; do
 for energyDetection in ${energyDetectionList} ; do
-         index=0      
-         for wifiEd in ${wifiEnergyDetectionList} ; do
-         for OPERATOR in A B ; do
-         simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}_${wifiEd}"
-         imgTag="indoor_"`echo "${lbtTxop}_${transport}_lambda_${ftpLambda}_${wifiEd}" | tr '.' '_'`
-         TRAFFIC=`print_traffic_model ${transport}`    
-	 #TITLE="txOp=${lbtTxop},${transport},${ftpLambda},${cwUpdateRule},${rlcAmRbsTimer},${drsPeriod},${dropPackets}"
-        
-         LATENCY_COLUMN=9
-         CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
-            `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
-      
-         FILES[$index]=results/cdf_latency_${simTag}_${OPERATOR}
-	 YCOLS[$index]='($2)'    
-	 XCOLS[$index]='($1)'
-	 LABELS[$index]=`print_operator_laa_wifi $OPERATOR`" WiFi ED=${wifiEd}dBm"
-	    
-	    index=`expr $index + 1`
-	done
-        done
-	PLOTTYPE="with linespoints"
-	XLABEL="Latency [ms]"
-	YLABEL="CDF"
-	RANGE=$LATENCY_CDF_RANGE
-	OPTIONS="$BASE_OPTIONS ; set key bottom Left right reverse"
-	IMGFILENAME="${imgTag}_latency_${transport}_${ftpLambda}_${cwUpdateRule}_${energyDetection}_${transport}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
-	plot
-	unset FILES
-	unset LABELS
-	unset YCOLS
-	unset XCOLS
+    index=0
+    # for wifiEd in ${wifiEnergyDetectionList} ; do
+    for OPERATOR in A B ; do
+        simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
+        imgTag="indoor_"`echo "${lbtTxop}_${transport}_lambda_${ftpLambda}" | tr '.' '_'`
+        TRAFFIC=`print_traffic_model ${transport}`
+        #TITLE="txOp=${lbtTxop},${transport},${ftpLambda},${cwUpdateRule},${rlcAmRbsTimer},${drsPeriod},${dropPackets}"
+
+        LATENCY_COLUMN=9
+        CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
+        `../utils/cdf.sh $LATENCY_COLUMN $CURRENT > results/cdf_latency_${simTag}_${OPERATOR}`
+
+        FILES[$index]=results/cdf_latency_${simTag}_${OPERATOR}
+        YCOLS[$index]='($2)'
+        XCOLS[$index]='($1)'
+        LABELS[$index]=`print_operator_laa_wifi $OPERATOR`" WiFi ED=${wifiEd}dBm"
+
+        index=`expr $index + 1`
+    done
+    # done
+    PLOTTYPE="with linespoints"
+    XLABEL="Latency [ms]"
+    YLABEL="CDF"
+    RANGE=$LATENCY_CDF_RANGE
+    OPTIONS="$BASE_OPTIONS ; set key bottom Left right reverse"
+    IMGFILENAME="${imgTag}_latency_${transport}_${ftpLambda}_${cwUpdateRule}_${energyDetection}_${transport}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
+    plot
+    unset FILES
+    unset LABELS
+    unset YCOLS
+    unset XCOLS
 done
 done
 done
@@ -96,37 +96,35 @@ for cwUpdateRule in ${cwUpdateRules} ; do
 for lbtTxop in ${lbtTxopList} ; do
 for ftpLambda in ${ftpLambdas} ; do
 for energyDetection in ${energyDetectionList} ; do
+    index=0
+    # for wifiEd in ${wifiEnergyDetectionList} ; do
+    for OPERATOR in A B ; do
+        simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
+        imgTag="indoor_"`echo "${lbtTxop}_${transport}_lambda_${ftpLambda}" | tr '.' '_'`
+        TRAFFIC=`print_traffic_model ${transport}`
+        #TITLE="txOp=${lbtTxop},${transport},${ftpLambda},${cwUpdateRule},${rlcAmRbsTimer},${drsPeriod},${dropPackets}"
+        THROUGHPUT_COLUMN=8
+        CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
+        `../utils/cdf.sh $THROUGHPUT_COLUMN $CURRENT > results/cdf_throughput_${simTag}_${OPERATOR}`
 
-        index=0
-        for wifiEd in ${wifiEnergyDetectionList} ; do
-        for OPERATOR in A B ; do
-	simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}_${wifiEd}"	
-	imgTag="indoor_"`echo "${lbtTxop}_${transport}_lambda_${ftpLambda}_${wifiEd}" | tr '.' '_'`
-	TRAFFIC=`print_traffic_model ${transport}`    
-	#TITLE="txOp=${lbtTxop},${transport},${ftpLambda},${cwUpdateRule},${rlcAmRbsTimer},${drsPeriod},${dropPackets}"    
-            THROUGHPUT_COLUMN=8
-	    CURRENT=results/lte_wifi_indoor_${simTag}_operator${OPERATOR}
-            `../utils/cdf.sh $THROUGHPUT_COLUMN $CURRENT > results/cdf_throughput_${simTag}_${OPERATOR}`
-
-	    FILES[$index]=results/cdf_throughput_${simTag}_${OPERATOR}
-	    YCOLS[$index]='($2)'    
-	    XCOLS[$index]='($1)'
-	    LABELS[$index]=`print_operator_laa_wifi $OPERATOR `" WiFi ED=${wifiEd}dBm"	    
-	    index=`expr $index + 1`
-	done
-	done
-	PLOTTYPE="with linespoints"
-	XLABEL="Throughput [Mbps]"
-	YLABEL="CDF"
-	RANGE=$THROUGHPUT_CDF_RANGE
-	OPTIONS="$BASE_OPTIONS ; set key top Left left reverse"
-	IMGFILENAME="${imgTag}_throughput_${transport}_${ftpLambda}_${cwUpdateRule}_${energyDetection}_${transport}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
-	plot
-	unset FILES
-	unset LABELS
-	unset YCOLS
-	unset XCOLS
-
+        FILES[$index]=results/cdf_throughput_${simTag}_${OPERATOR}
+        YCOLS[$index]='($2)'
+        XCOLS[$index]='($1)'
+        LABELS[$index]=`print_operator_laa_wifi $OPERATOR `" WiFi ED=${wifiEd}dBm"
+        index=`expr $index + 1`
+    done
+    # done
+    PLOTTYPE="with linespoints"
+    XLABEL="Throughput [Mbps]"
+    YLABEL="CDF"
+    RANGE=$THROUGHPUT_CDF_RANGE
+    OPTIONS="$BASE_OPTIONS ; set key top Left left reverse"
+    IMGFILENAME="${imgTag}_throughput_${transport}_${ftpLambda}_${cwUpdateRule}_${energyDetection}_${transport}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
+    plot
+    unset FILES
+    unset LABELS
+    unset YCOLS
+    unset XCOLS
 done
 done
 done

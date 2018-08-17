@@ -67,7 +67,7 @@ for drsPeriod in ${drsPeriodList} ; do
      for energyDetection in ${energyDetectionList} ; do
       for cwUpdateRule in ${cwUpdateRules} ; do
        duration=$(echo "$base_duration/$ftpLambda" | bc)
-       simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}_${wifiEd}"
+       simTag="tX_${lbtTxop}_${transport}_${ftpLambda}_cellA_${cell}_${cwUpdateRule}_eD_${energyDetection}_${rlcAmRbsTimer}_${drsPeriod}_${dropPackets}"
        /usr/bin/time -f '%e %U %S %K %M %x %C' -o "${outputDir}"/time_stats -a \
        ./waf --run lte-wifi-indoor --command="%s --cellConfigA=${cell} --cellConfigB=Wifi --lteDutyCycle=${lteDutyCycle} --lbtTxop=${lbtTxop} --logPhyArrivals=${logPhyArrivals} --logCwChanges=${logCwChanges} --logBackoffChanges=${logBackoffChanges} --logBeaconArrivals=${logBeaconArrivals} --logBeaconNodeId=${logBeaconNodeId} --logWifiRetries=${logWifiRetries} --logWifiFailRetries=${logWifiFailRetries} --logHarqFeedback=${logHarqFeedback} --logTxops=${logTxops} --transport=${transport} --duration=${duration} --simTag=${simTag} --outputDir=${outputDir} --RngRun=${RngRun}  --laaEdThreshold=${energyDetection} --ftpLambda=${ftpLambda} --cwUpdateRule=${cwUpdateRule} --drsPeriod=${drsPeriod} --dropPackets=${dropPackets} --tcpRlcMode=${tcpRlcMode} --rlcAmRbsTimer=${rlcAmRbsTimer} --voiceEnabled=${voiceEnabled} --ns3::TcpSocket::SegmentSize=${tcpSegSize} --ns3::TcpSocket::InitialCwnd=${tcpInitialCw} --wifiQueueMaxSize=2000p --ns3::LteEnbRrc::DefaultTransmissionMode=2 --bsCornerPlacement=${bsCornerPlacement}"
       done
