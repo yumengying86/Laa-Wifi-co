@@ -514,7 +514,6 @@ struct DataTx
 struct BeaconArrival
 {
   Time m_time;
-  Time m_interval;
   uint32_t m_nodeId;
 };
 
@@ -675,11 +674,10 @@ BackoffChangeCb (std::string context, uint32_t oldVal, uint32_t newVal)
 }
 
 void
-BeaconArrivalCb (std::string context, Time oldVal, Time newVal)
+BeaconArrivalCb (std::string context, Time val)
 {
   BeaconArrival ba;
-  ba.m_time = newVal;
-  ba.m_interval = newVal - oldVal;
+  ba.m_time = val;
   ba.m_nodeId = ContextToNodeId (context);
   g_beaconArrivals.push_back (ba);
 }
@@ -1490,13 +1488,12 @@ SaveBeaconStats (std::string filename, const std::vector<BeaconArrival> &arrival
       NS_LOG_ERROR ("Can't open file " << filename);
       return;
     }
-  outFile << "#time(s)   interval(s) nodeId" << std::endl;
+  outFile << "#time(s)   nodeId" << std::endl;
   for (std::vector<BeaconArrival>::size_type i = 0; i != arrivals.size (); i++)
     {
       if (uintegerValue.Get () == UINT32_MAX || uintegerValue.Get () == arrivals[i].m_nodeId)
         {
           outFile << std::setprecision (9) << std::fixed << arrivals[i].m_time.GetSeconds () <<  " ";
-          outFile << arrivals[i].m_interval.GetSeconds () <<  " ";
           outFile << arrivals[i].m_nodeId << std::endl;
         }
     }
