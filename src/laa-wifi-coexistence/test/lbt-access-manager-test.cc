@@ -22,6 +22,7 @@
 #include "ns3/log.h"
 #include "ns3/packet-burst.h"
 #include "ns3/wifi-spectrum-value-helper.h"
+#include "ns3/wifi-phy-state-helper.h"
 #include "ns3/spectrum-wifi-helper.h"
 #include "ns3/spectrum-wifi-phy.h"
 #include "ns3/interference-helper.h"
@@ -62,8 +63,8 @@ protected:
   Ptr<SpectrumWifiPhy> m_phy;
   Ptr<LbtAccessManager> m_lbt;
   Ptr<SpectrumSignalParameters> MakeSignal (double txPowerWatts);
-  void SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector);
-  void SpectrumWifiPhyRxFailure (Ptr<Packet> p, double snr);
+  void SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector, std::vector<bool> perMpduStatus);
+  void SpectrumWifiPhyRxFailure (Ptr<Packet> p);
   uint32_t m_count;
   std::vector<Time> m_accessGrantedTimes;
   Time m_durationTotal;
@@ -105,7 +106,7 @@ LbtAccessManagerBaseTestCase::MakeSignal (double txPowerWatts)
 
   pkt->AddHeader (hdr);
   pkt->AddTrailer (trailer);
-  WifiPhyTag tag (txVector, mpdutype, 1);
+  WifiPhyTag tag (txVector.GetPreambleType (), txVector.GetMode ().GetModulationClass (), 1);
   pkt->AddPacketTag (tag);
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, txPowerWatts, GUARD_WIDTH);
   Ptr<WifiSpectrumSignalParameters> txParams = Create<WifiSpectrumSignalParameters> ();
@@ -124,16 +125,16 @@ LbtAccessManagerBaseTestCase::SendSignal (double txPowerWatts)
 }
 
 void
-LbtAccessManagerBaseTestCase::SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector)
+LbtAccessManagerBaseTestCase::SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector, std::vector<bool> perMpduStatus)
 {
   NS_LOG_FUNCTION (this << p << snr << txVector);
   m_count++;
 }
 
 void
-LbtAccessManagerBaseTestCase::SpectrumWifiPhyRxFailure (Ptr<Packet> p, double snr)
+LbtAccessManagerBaseTestCase::SpectrumWifiPhyRxFailure (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << p << snr);
+  NS_LOG_FUNCTION (this << p);
   m_count++;
 }
 

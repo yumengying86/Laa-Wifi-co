@@ -2030,8 +2030,6 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
   WifiMacHelper mac;
 
-  spectrumPhy.Set ("ShortGuardEnabled", BooleanValue (false));
-  spectrumPhy.Set ("ChannelWidth", UintegerValue (20));
   mac.SetType ("ns3::ApWifiMac",
                "Ssid", SsidValue (ssid),
                "EnableBeaconJitter", BooleanValue (true));
@@ -2043,6 +2041,11 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
       spectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
       apDevices.Add (wifi.Install (spectrumPhy, mac, bsNodes.Get (i)));
     }
+   // Set channel width
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth", UintegerValue (20));
+
+  // Set guard interval
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
 
   BooleanValue booleanValue;
   bool found;
@@ -2093,8 +2096,6 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
   WifiMacHelper mac;
 
-  spectrumPhy.Set ("ShortGuardEnabled", BooleanValue (false));
-  spectrumPhy.Set ("ChannelWidth", UintegerValue (20));
   mac.SetType ("ns3::StaWifiMac",
                "Ssid", SsidValue (ssid),
                "ActiveProbing", BooleanValue (false));
@@ -2106,6 +2107,12 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
       spectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
       staDevices.Add (wifi.Install (spectrumPhy, mac, ueNodes.Get (i)));
     }
+   // Set channel width
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth", UintegerValue (20));
+
+  // Set guard interval
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
+
   BooleanValue booleanValue;
   bool found;
   found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);

@@ -834,7 +834,7 @@ LteHelper::InstallSingleUeDevice (Ptr<Node> n)
           // CQI calculation based on PDCCH for signal and PDSCH for interference
           //NOTE: Change in pCtrl chunk processor could impact the RLF detection
           //since it is based on CTRL SINR.
-          pCtrl->AddCallback (MakeCallback (&LteUePhy::GenerateMixedCqiReport, phy));
+          pCqi->AddCallback (MakeCallback (&LteUePhy::GenerateMixedCqiReport, phy));
           Ptr<LteAverageChunkProcessor> pDataInterf = Create<LteAverageChunkProcessor> ();
           pDataInterf->AddCallback (MakeCallback (&LteUePhy::ReportDataInterference, phy));
           dlPhy->AddInterferenceDataChunkProcessor (pDataInterf);

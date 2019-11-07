@@ -57,8 +57,8 @@ protected:
   Ptr<LbtAccessManager> m_lbt;
   Ptr<SpectrumSignalParameters> MakeSignal (double txPowerWatts);
   void SendSignal (double txPowerWatts);
-  void SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector);
-  void SpectrumWifiPhyRxFailure (Ptr<Packet> p, double snr);
+  void SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector, std::vector<bool> perMpduStatus);
+  void SpectrumWifiPhyRxFailure (Ptr<Packet> p);
 private:
   virtual void DoRun (void);
   void ReceiveAccessGranted (Time duration);
@@ -97,7 +97,7 @@ LbtAccessManagerEdThresholdTest::MakeSignal (double txPowerWatts)
 
   pkt->AddHeader (hdr);
   pkt->AddTrailer (trailer);
-  WifiPhyTag tag (txVector, mpdutype, 1);
+  WifiPhyTag tag (txVector.GetPreambleType (), txVector.GetMode ().GetModulationClass (), 1);
   pkt->AddPacketTag (tag);
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, txPowerWatts, GUARD_WIDTH);
   Ptr<WifiSpectrumSignalParameters> txParams = Create<WifiSpectrumSignalParameters> ();
@@ -116,13 +116,13 @@ LbtAccessManagerEdThresholdTest::SendSignal (double txPowerWatts)
 }
 
 void
-LbtAccessManagerEdThresholdTest::SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector)
+LbtAccessManagerEdThresholdTest::SpectrumWifiPhyRxSuccess (Ptr<Packet> p, double snr, WifiTxVector txVector, std::vector<bool> perMpduStatus)
 {
   NS_FATAL_ERROR ("Should be unreachable; Wi-Fi rx reception disabled");
 }
 
 void
-LbtAccessManagerEdThresholdTest::SpectrumWifiPhyRxFailure (Ptr<Packet> p, double snr)
+LbtAccessManagerEdThresholdTest::SpectrumWifiPhyRxFailure (Ptr<Packet> p)
 {
   NS_FATAL_ERROR ("Should be unreachable; Wi-Fi rx reception disabled");
 }
