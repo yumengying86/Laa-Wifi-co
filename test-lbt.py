@@ -16,19 +16,19 @@ shell_tests = [
 ]
 
 examples = [
-    ("lte-wifi-simple"),
-    ("lte-wifi-simple --cellConfigA=Wifi --cellConfigB=Wifi"),
-    ("lte-wifi-simple --cellConfigA=Wifi --cellConfigB=Lte"),
-    ("lte-wifi-simple --lteDutyCycle=0.5"),
-    ("lte-wifi-simple --lteDutyCycle=0.5 --transport=Tcp"),
+    ("laa-wifi-simple"),
+    ("laa-wifi-simple --cellConfigA=Wifi --cellConfigB=Wifi"),
+    ("laa-wifi-simple --cellConfigA=Wifi --cellConfigB=Lte"),
+    ("laa-wifi-simple --lteDutyCycle=0.5"),
+    ("laa-wifi-simple --lteDutyCycle=0.5 --transport=Tcp"),
     ("wifi-co-channel-networks"),
-    ("lte-wifi-indoor --cellConfigA=Lte --cellConfigB=Wifi"),
-    ("lte-wifi-indoor --cellConfigA=Wifi --cellConfigB=Wifi"),
-    ("lte-wifi-indoor --cellConfigA=Wifi --cellConfigB=Lte"),
-    ("lte-wifi-itu-umi-pathloss"),
-    ("lte-wifi-outdoor"),
-    ("lte-wifi-itu-inh-pathloss"),
-    ("lte-wifi-80211ax-pathloss"),
+    ("laa-wifi-indoor --cellConfigA=Lte --cellConfigB=Wifi"),
+    ("laa-wifi-indoor --cellConfigA=Wifi --cellConfigB=Wifi"),
+    ("laa-wifi-indoor --cellConfigA=Wifi --cellConfigB=Lte"),
+    ("laa-wifi-itu-umi-pathloss"),
+    ("laa-wifi-outdoor"),
+    ("laa-wifi-itu-inh-pathloss"),
+    ("laa-wifi-80211ax-pathloss"),
     ("lena-dual-stripe --epc=1 --fadingTrace=src/lte/model/fading-traces/fading_trace_EPA_3kmph.fad --simTime=0.01"),
 ]
 
@@ -90,7 +90,7 @@ lte_tests = [
     ("lte-spectrum-value-helper")
 ]
 
-os.chdir ("src/lte-wifi-coexistence/test")
+os.chdir ("src/laa-wifi-coexistence/test")
 return_code = subprocess.call(["bash", "test-simple-phy-duration.sh"], stdout=FNULL, stderr=subprocess.STDOUT)
 if (return_code):
     print("FAIL: test-simple-phy-duration.sh")
