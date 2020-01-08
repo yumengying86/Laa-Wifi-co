@@ -129,7 +129,7 @@ LbtAccessManager::GetTypeId (void)
                    "Duration of channel access grant.",
                    TimeValue (MilliSeconds (8)),
                    MakeTimeAccessor (&LbtAccessManager::m_txop),
-                   MakeTimeChecker (MilliSeconds (4), MilliSeconds (20)))
+                   MakeTimeChecker (MilliSeconds (0), MilliSeconds (20)))
     .AddAttribute ("UseReservationSignal",
                    "Whether to use a reservation signal when there is no data ready to be transmitted.",
                    BooleanValue (true),
@@ -231,7 +231,7 @@ LbtAccessManager::SetWifiPhy (Ptr<SpectrumWifiPhy> phy)
   // Configure the WifiPhy to treat each incoming signal as a foreign signal
   // (energy detection only)
   m_wifiPhy->SetAttribute ("DisableWifiReception", BooleanValue (true));
-  m_wifiPhy->SetAttribute ("CcaMode1Threshold", DoubleValue (m_edThreshold));
+  m_wifiPhy->SetAttribute ("CcaEdThreshold", DoubleValue (m_edThreshold));
   // Initialization of post-attribute-construction variables can be done here
   m_cw = m_cwMin;
 }

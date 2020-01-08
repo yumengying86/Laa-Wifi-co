@@ -2076,7 +2076,7 @@ WifiPhy::GetPayloadDuration (uint32_t size, WifiTxVector txVector, uint16_t freq
       Nes = 2;
     }
   if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_VHT)
-    {
+    { 
       if (txVector.GetChannelWidth () == 40
           && txVector.GetNss () == 3
           && payloadMode.GetMcsValue () >= 8)
@@ -2221,7 +2221,6 @@ WifiPhy::GetPayloadDuration (uint32_t size, WifiTxVector txVector, uint16_t freq
     }
 
   double numDataBitsPerSymbol = payloadMode.GetDataRate (txVector) * symbolDuration.GetNanoSeconds () / 1e9;
-
   double numSymbols = 0;
   if (mpdutype == FIRST_MPDU_IN_AGGREGATE)
     {
@@ -2286,6 +2285,7 @@ WifiPhy::GetPayloadDuration (uint32_t size, WifiTxVector txVector, uint16_t freq
     case WIFI_MOD_CLASS_HT:
     case WIFI_MOD_CLASS_VHT:
       {
+        // std::cout << "ymy GetMcsValue: " << (int)payloadMode.GetMcsValue() << std::endl;
         if (payloadMode.GetModulationClass () == WIFI_MOD_CLASS_HT && Is2_4Ghz (frequency)
             && (mpdutype == NORMAL_MPDU || mpdutype == SINGLE_MPDU || mpdutype == LAST_MPDU_IN_AGGREGATE)) //at 2.4 GHz
           {

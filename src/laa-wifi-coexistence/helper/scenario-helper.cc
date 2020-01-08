@@ -61,6 +61,25 @@ static int64_t streamIndex = 1000;
 // Global Values are used in place of command line arguments so that these
 // values may be managed in the ns-3 ConfigStore system.
 //
+
+static ns3::GlobalValue g_phyLogName ("phyLogName",
+                                  "phy log name",
+                                  ns3::StringValue ("./"),
+                                  ns3::MakeStringChecker ());
+
+static ns3::GlobalValue g_shutA("shutA",
+                                "shut down A ?",
+                                ns3::BooleanValue (false),
+                                ns3::MakeBooleanChecker ());
+static ns3::GlobalValue g_shutB("shutB",
+                                "shut down B ?",
+                                ns3::BooleanValue (false),
+                                ns3::MakeBooleanChecker ());
+static ns3::GlobalValue g_monitorStartTimeSeconds("monitorStartTimeSeconds",
+                                "Monitor start time (seconds)",
+                                ns3::DoubleValue (0),
+                                ns3::MakeDoubleChecker<double> ());
+
 static ns3::GlobalValue g_serverStartTimeSeconds ("serverStartTimeSeconds",
                                                   "Server start time (seconds)",
                                                   ns3::DoubleValue (2),
@@ -206,7 +225,7 @@ static ns3::GlobalValue g_wifiMacQueueMaxDelay ("wifiQueueMaxDelay",
 
 static ns3::GlobalValue g_wifiMacQueueMaxSize ("wifiQueueMaxSize",
                                          "change from default 400 packets to change the queue size for Wifi packets",
-                                         ns3::QueueSizeValue (QueueSize ("400p")),
+                                         ns3::QueueSizeValue (QueueSize ("40000000p")),
                                          ns3::MakeQueueSizeChecker ());
 
 static ns3::GlobalValue g_mibPeriod ("mibPeriod",
@@ -1761,7 +1780,7 @@ SaveAssociationStats(std::string filename, const std::vector<AssociationEvent> &
 void
 ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4AddressHelper& internetIpv4Helper, NodeContainer bsNodes, NodeContainer ueNodes, NodeContainer clientNodes, NetDeviceContainer& bsDevices, NetDeviceContainer& ueDevices, struct PhyParams phyParams, std::vector<LteSpectrumValueCatcher>& lteDlSinrCatcherVector, std::bitset<40> absPattern, Transport_e transport)
 {
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (2000000));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (0xffffffff));
 
   // For LTE, the client node needs to be connected only to the PGW/SGW node
   // The EpcHelper will then take care of connecting the PGW/SGW node to the eNBs
@@ -1871,7 +1890,7 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
               std::vector<LteSpectrumValueCatcher>& lteDlSinrCatcherVector, std::bitset<40> absPattern, Transport_e transport, Time lbtChannelAccessManagerInstallTime)
 {
 
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (2000000));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (0xffffffff));
 
   // For LTE, the client node needs to be connected only to the PGW/SGW node
   // The EpcHelper will then take care of connecting the PGW/SGW node to the eNBs
@@ -2021,8 +2040,8 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
   spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
   spectrumPhy.Set ("Antennas", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (2));
+  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
   spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
   WifiHelper wifi;
@@ -2087,8 +2106,8 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
   spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
   spectrumPhy.Set ("Antennas", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (2));
+  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
   spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
   WifiHelper wifi;
@@ -2438,8 +2457,10 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   UintegerValue uintegerValue;
   GlobalValue::GetValueByName ("udpPacketSize", uintegerValue);
   uint64_t bitRate = dataRateValue.Get().GetBitRate ();
-  uint32_t packetSize = uintegerValue.Get (); // bytes
-  double interval = static_cast<double> (packetSize * 8) / bitRate;
+  // uint32_t packetSize = uintegerValue.Get (); // bytes
+  // double interval = static_cast<double> (packetSize * 8) / bitRate;
+  double interval = static_cast<double> (0.00001);
+
   Time udpInterval;
   // if bitRate < UDP_SATURATION_RATE, use the calculated interval
   // if bitRate >= UDP_SATURATION_RATE, and the spreadUdpLoad optimization is
@@ -2876,14 +2897,22 @@ ConfigureAndRunScenario (Config_e cellConfigA,
               nonVoiceIpUeB.Add (ipUeB.Get (index));
             }
         }
-
+      BooleanValue isShut;
+      GlobalValue::GetValueByName("shutA",isShut);
+      bool shutA=isShut.Get();
+      GlobalValue::GetValueByName("shutB",isShut);
+      bool shutB=isShut.Get();
+      std::cout<<"shutA?  "<<shutA<<std::endl;
+      std::cout<<"shutB?  "<<shutB<<std::endl;
       if (transport == UDP)
         {
           ApplicationContainer serverApps, clientApps;
           serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
-          clientApps.Add (ConfigureUdpClients (clientNodesA, ipUeA, clientStartTime, clientStopTime, udpInterval));
+          if(!shutA) clientApps.Add (ConfigureUdpClients (clientNodesA, ipUeA, clientStartTime, clientStopTime, udpInterval));
+          else clientApps.Add (ConfigureUdpClients (clientNodesA, ipUeA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval));
           serverApps.Add (ConfigureUdpServers (nonVoiceUeNodesB, serverStartTime, serverStopTime));
-          clientApps.Add (ConfigureUdpClients (clientNodesB, nonVoiceIpUeB, clientStartTime, clientStopTime, udpInterval));
+          if(!shutB) clientApps.Add (ConfigureUdpClients (clientNodesB, nonVoiceIpUeB, clientStartTime, clientStopTime, udpInterval));
+          else clientApps.Add (ConfigureUdpClients (clientNodesB, nonVoiceIpUeB,  Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval));
         }
       else if (transport == FTP)
         {
@@ -3181,9 +3210,12 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     }
 
   GlobalValue::GetValueByName ("logPhyArrivals", booleanValue);
+  StringValue logName; 
+  GlobalValue::GetValueByName ("phyLogName", logName);
+  std::string phylog = logName.Get ();
   if (booleanValue.Get () == true)
     {
-      SaveSpectrumPhyStats (outFileName + "_phy_log", g_arrivals);
+      SaveSpectrumPhyStats (outFileName + phylog, g_arrivals);
     }
   GlobalValue::GetValueByName ("logTxops", booleanValue);
   if (booleanValue.Get () == true)

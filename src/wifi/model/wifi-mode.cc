@@ -207,7 +207,6 @@ WifiMode::GetDataRate (uint16_t channelWidth, uint16_t guardInterval, uint8_t ns
         {
           NS_ASSERT_MSG (IsAllowed (channelWidth, nss), "VHT MCS " << +item->mcsValue << " forbidden at " << channelWidth << " MHz when NSS is " << +nss);
         }
-
       NS_ASSERT (guardInterval == 800 || guardInterval == 400);
       symbolRate = (1 / (3.2 + (static_cast<double> (guardInterval) / 1000))) * 1e6;
 
