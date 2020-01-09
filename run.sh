@@ -5,16 +5,16 @@
 # sed -i "446c       dcf->SetTxopLimit (MicroSeconds (3008));"  src/wifi/model/wifi-mac.cc
 # ./waf --run "scratch/test --numA=1 --numB=1 --duration=30 --lbtTxop=3 --logPhyArrivals=true"
 
-# laa and wifi coexistence, 1v1
-# Change laa's txop from 1 to 8ms
-int=1
-while(( $int<=5 ))
-do
-    # sed -i "446c       dcf->SetTxopLimit (MicroSeconds (3008));"  src/wifi/model/wifi-mac.cc
-    taskset -c $int nohup ./waf --run "scratch/laa --numA=1 --numB=1 --d2=`expr $int \* 10` --phyLogName=_phy_log_$int --duration=1 --logPhyArrivals=true" 2>&1  > d$int &
-    sleep 1
-    let "int++"
-done
+# # laa and wifi coexistence, 1v1
+# # Change d2 from 10 to 50m
+# int=1
+# while(( $int<=5 ))
+# do
+#     # sed -i "446c       dcf->SetTxopLimit (MicroSeconds (3008));"  src/wifi/model/wifi-mac.cc
+#     taskset -c $int nohup ./waf --run "scratch/laa --numA=1 --numB=1 --d2=`expr $int \* 10` --phyLogName=_phy_log_$int --duration=1 --logPhyArrivals=true" 2>&1  > d$int &
+#     sleep 1
+#     let "int++"
+# done
 
 # # lte only
 # ./waf --run "scratch/test --numA=1 --numB=1 --duration=30 --udpRate=300000000 --shutB=true --cellConfigA=Lte --d2=500 --logPhyArrivals=true" 
@@ -31,14 +31,21 @@ done
 # sed -i "446c       dcf->SetTxopLimit (MicroSeconds (3008));"  src/wifi/model/wifi-mac.cc
 # ./waf --run "scratch/test --numA=1 --numB=1 --duration=30 --udpRate=300000000 --d2=500 --lbtTxop=3 --logPhyArrivals=true" 
 
-# # laa and wifi coexistence, 1v1
-# # Change laa's txop from 1 to 8ms
+# laa and wifi coexistence, 1v1
+# Change laa's txop from 1 to 8ms
+int=1
+while(( $int<=8 ))
+do
+    t=`expr $int \+ 8`
+    taskset -c $t nohup ./waf --run "scratch/laa --numA=1 --numB=1 --d2=10 --lbtTxop=${int} --phyLogName=_phy_log_$t --duration=50 --logPhyArrivals=true" 2>&1  > 30s_lbttxop$int &
+    sleep 1
+    let "int++"
+done
 # int=1
 # while(( $int<=8 ))
 # do
-#     sed -i "446c       dcf->SetTxopLimit (MicroSeconds (3008));"  src/wifi/model/wifi-mac.cc
-#     ./waf --run "scratch/test --numA=1 --numB=1 --duration=30 --udpRate=300000000 --lbtTxop=${int} --logPhyArrivals=true"  
-#     mv laa_wifi_simple_default_phy_log laa1v1txop${int}.txt
+#     taskset -c $int nohup ./waf --run "scratch/laa --numA=1 --numB=1 --d2=20 --lbtTxop=${int} --phyLogName=_phy_log_$int --duration=15 --logPhyArrivals=true" 2>&1  > lbttxop$int &
+#     sleep 1
 #     let "int++"
 # done
 

@@ -1,5 +1,4 @@
 /build/
-.vscode/
 /test*
 *\.pyc
 *\.o
@@ -9,3 +8,5 @@
 /laa_wifi_simple_default_*
 /Dl*
 /Ul*
+/.waf*/
+.lock-waf_linux_build
