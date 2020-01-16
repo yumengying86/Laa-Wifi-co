@@ -1088,6 +1088,8 @@ PrintFlowMonitorStats (Ptr<FlowMonitor> monitor, FlowMonitorHelper& flowmonHelpe
         {
           protoStream.str ("UDP");
         }
+        std::cout << "ymy last: " << i->second.timeLastRxPacket.GetSeconds () << std::endl;
+        std::cout << "ymy fist: " << i->second.timeFirstTxPacket.GetSeconds () << std::endl;
       std::cout << "Flow " << i->first << " (" << t.sourceAddress << ":" << t.sourcePort << " -> " << t.destinationAddress << ":" << t.destinationPort << ") proto " << protoStream.str () << "\n";
       std::cout << "  Tx Packets: " << i->second.txPackets << "\n";
       std::cout << "  Tx Bytes:   " << i->second.txBytes << "\n";
@@ -1097,7 +1099,7 @@ PrintFlowMonitorStats (Ptr<FlowMonitor> monitor, FlowMonitorHelper& flowmonHelpe
         {
           // Measure the duration of the flow from receiver's perspective
           double rxDuration = i->second.timeLastRxPacket.GetSeconds () - i->second.timeFirstTxPacket.GetSeconds ();
-          std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / rxDuration / 1000 / 1000  << " Mbps\n";
+	std::cout << "  Throughput: " << i->second.rxBytes * 8.0 / rxDuration / 1000 / 1000  << " Mbps\n";
           std::cout << "  Mean delay:  " << 1000 * i->second.delaySum.GetSeconds () / i->second.rxPackets << " ms\n";
           std::cout << "  Mean jitter:  " << 1000 * i->second.jitterSum.GetSeconds () / i->second.rxPackets  << " ms\n";
         }
@@ -2457,9 +2459,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   UintegerValue uintegerValue;
   GlobalValue::GetValueByName ("udpPacketSize", uintegerValue);
   uint64_t bitRate = dataRateValue.Get().GetBitRate ();
-  // uint32_t packetSize = uintegerValue.Get (); // bytes
-  // double interval = static_cast<double> (packetSize * 8) / bitRate;
-  double interval = static_cast<double> (0.00001);
+  uint32_t packetSize = uintegerValue.Get (); // bytes
+  double interval = static_cast<double> (packetSize * 8) / bitRate;
 
   Time udpInterval;
   // if bitRate < UDP_SATURATION_RATE, use the calculated interval
@@ -3062,12 +3063,11 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   monitorA->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
   monitorA->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
   monitorA->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
-
+  
   Ptr<FlowMonitor> monitorB = flowmonHelperB.Install (endpointNodesB);
   monitorB->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
   monitorB->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
   monitorB->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
-
 
   // these slow down simulations, only enable them if you need them
   //lteHelper->EnableTraces();
