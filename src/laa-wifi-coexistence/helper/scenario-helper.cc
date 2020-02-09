@@ -2173,7 +2173,7 @@ ConfigureUdpClients (NodeContainer client, Ipv4InterfaceContainer servers, Time 
   uint32_t remotePort = UDP_SERVER_PORT;
   ApplicationContainer clientApps;
   UdpClientHelper clientHelper (Address (), 0);
-  clientHelper.SetAttribute ("MaxPackets", UintegerValue (1e6));
+  clientHelper.SetAttribute ("MaxPackets", UintegerValue (0xffffffff));
   UintegerValue packetSizeValue;
   GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
   clientHelper.SetAttribute ("Interval", TimeValue (interval));
