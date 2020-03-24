@@ -608,7 +608,6 @@ std::vector<CtrlSignalLog> g_ctrlSignalLog;
 double g_txopDurationCounter = 0;
 double g_arrivalsDurationCounter = 0;
 
-
 void
 DeassociationLogging (std::string context, Mac48Address address)
 {
@@ -704,26 +703,25 @@ BeaconArrivalCb (std::string context, Time val)
 void
 SignalCb (std::string context, bool wifi, uint32_t senderNodeId, double rxPowerDbm, Time rxDuration)
 {
-  SignalArrival arr;
-  arr.m_time = Simulator::Now();
-  arr.m_duration = rxDuration;
-  arr.m_nodeId = ContextToNodeId (context);
-  arr.m_senderNodeId = senderNodeId;
-  arr.m_wifi = wifi;
-  arr.m_power = rxPowerDbm;
-  g_arrivals.push_back (arr);
-
+  Time time = Simulator::Now();
   UintegerValue uintegerValue;
   GlobalValue::GetValueByName ("logPhyNodeId", uintegerValue);
-  if ((uintegerValue.Get () == UINT32_MAX || uintegerValue.Get () == arr.m_nodeId) && !wifi)
-    {
-      UintegerValue uintegerValue;
-      GlobalValue::GetValueByName ("logTxopNodeId", uintegerValue);
-      if  (uintegerValue.Get () == arr.m_senderNodeId)
-        {
-          g_arrivalsDurationCounter += rxDuration.GetSeconds();
-        }
-    }
+  uint32_t nodeId = ContextToNodeId (context);
+  if (uintegerValue.Get () == UINT32_MAX || uintegerValue.Get () == nodeId)
+  {
+    std::cout << std::setprecision (9) << std::fixed << time.GetSeconds () <<  " "
+      << nodeId << " " << ((wifi == true) ? "wifi " : " lte ") << senderNodeId << " "
+      <<  time.GetSeconds () + rxDuration.GetSeconds () << " " << rxDuration.GetSeconds () * 1000.0 << " " << rxPowerDbm << std::endl;
+  }
+  // if ((uintegerValue.Get () == UINT32_MAX || uintegerValue.Get () == arr.m_nodeId) && !wifi)
+  //   {
+  //     UintegerValue uintegerValue;
+  //     GlobalValue::GetValueByName ("logTxopNodeId", uintegerValue);
+  //     if  (uintegerValue.Get () == arr.m_senderNodeId)
+  //       {
+  //         g_arrivalsDurationCounter += rxDuration.GetSeconds();
+  //       }
+  //   }
 
   NS_LOG_DEBUG (context << " " << wifi << " " << senderNodeId << " " << rxPowerDbm << " " << rxDuration.GetSeconds ()/1000.0);
 }
@@ -3118,6 +3116,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   GlobalValue::GetValueByName ("logPhyArrivals", booleanValue);
   if (booleanValue.Get () == true)
     {
+      std::cout << "#time(s) nodeId type sender endTime(s) duration(ms) power(Dbm)" << std::endl;
       Simulator::Schedule (clientStartTime, &SchedulePhyLogConnect);
       Simulator::Schedule (clientStopTime, &SchedulePhyLogDisconnect);
     }
@@ -3209,14 +3208,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       ueNodesForLogs.Add(ueNodesB);
     }
 
-  GlobalValue::GetValueByName ("logPhyArrivals", booleanValue);
-  StringValue logName; 
-  GlobalValue::GetValueByName ("phyLogName", logName);
-  std::string phylog = logName.Get ();
-  if (booleanValue.Get () == true)
-    {
-      SaveSpectrumPhyStats (outFileName + phylog, g_arrivals);
-    }
   GlobalValue::GetValueByName ("logTxops", booleanValue);
   if (booleanValue.Get () == true)
     {
