@@ -1780,7 +1780,7 @@ SaveAssociationStats(std::string filename, const std::vector<AssociationEvent> &
 void
 ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4AddressHelper& internetIpv4Helper, NodeContainer bsNodes, NodeContainer ueNodes, NodeContainer clientNodes, NetDeviceContainer& bsDevices, NetDeviceContainer& ueDevices, struct PhyParams phyParams, std::vector<LteSpectrumValueCatcher>& lteDlSinrCatcherVector, std::bitset<40> absPattern, Transport_e transport)
 {
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (0xffffffff));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (4294967295u));
 
   // For LTE, the client node needs to be connected only to the PGW/SGW node
   // The EpcHelper will then take care of connecting the PGW/SGW node to the eNBs
@@ -1885,38 +1885,35 @@ ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
 }
 
 void
-ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4AddressHelper& internetIpv4Helper, NodeContainer bsNodes,
+ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4InterfaceContainer& internetIpIfaces, NodeContainer bsNodes,
               NodeContainer ueNodes, NodeContainer clientNodes, NetDeviceContainer& bsDevices, NetDeviceContainer& ueDevices, struct PhyParams phyParams,
               std::vector<LteSpectrumValueCatcher>& lteDlSinrCatcherVector, std::bitset<40> absPattern, Transport_e transport, Time lbtChannelAccessManagerInstallTime)
 {
 
-  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (0xffffffff));
+  Config::SetDefault ("ns3::LteRlcUm::MaxTxBufferSize", UintegerValue (4294967295u));
 
   // For LTE, the client node needs to be connected only to the PGW/SGW node
   // The EpcHelper will then take care of connecting the PGW/SGW node to the eNBs
 
-  Ptr<Node> clientNode;
-
   // uf there are client nodes configure link to them
-  if (clientNodes.GetN () != 0)
-    {
-      clientNode = clientNodes.Get (0);
-      Ptr<Node> pgw = epcHelper->GetPgwNode ();
-      PointToPointHelper p2ph;
-      p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Gb/s")));
-      p2ph.SetDeviceAttribute ("Mtu", UintegerValue (1500));
-      p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0.0)));
-      NetDeviceContainer internetDevices = p2ph.Install (pgw, clientNode);
+    Ptr<Node> clientNode = clientNodes.Get (0);
+    Ptr<Node> pgw = epcHelper->GetPgwNode ();
+    PointToPointHelper p2ph;
+    p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Gb/s")));
+    p2ph.SetDeviceAttribute ("Mtu", UintegerValue (1500));
+    p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0.0)));
+    NetDeviceContainer internetDevices = p2ph.Install (pgw, clientNode);
+    Ipv4AddressHelper ipv4h;
+    ipv4h.SetBase ("1.0.0.0", "255.0.0.0");
+    Ipv4InterfaceContainer internetIpIface = ipv4h.Assign (internetDevices);
+      
+    // interface 0 is localhost, 1 is the p2p device
+    //Ipv4Address clientNodeAddr = internetIpIface.GetAddress (1);
 
-      Ipv4InterfaceContainer internetIpIfaces = internetIpv4Helper.Assign (internetDevices);
-      // interface 0 is localhost, 1 is the p2p device
-      //Ipv4Address clientNodeAddr = internetIpIfaces.GetAddress (1);
-
-      // make LTE and network reachable from the client node
-      Ipv4StaticRoutingHelper ipv4RoutingHelper;
-      Ptr<Ipv4StaticRouting> clientNodeStaticRouting = ipv4RoutingHelper.GetStaticRouting (clientNode->GetObject<Ipv4> ());
-      clientNodeStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
-    }
+    // make LTE and network reachable from the client node
+    Ipv4StaticRoutingHelper ipv4RoutingHelper;
+    Ptr<Ipv4StaticRouting> clientNodeStaticRouting = ipv4RoutingHelper.GetStaticRouting (clientNode->GetObject<Ipv4> ());
+    clientNodeStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
 
 
   // LTE configuration parametes
@@ -1981,13 +1978,10 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
           //Simulator::Schedule (lbtChannelAccessManagerInstallTime, &LaaWifiCoexistenceHelper::ConfigureEnbDevicesForLbt, laaWifiCoexistenceHelper, bsDevices, phyParams);
         }
     }
-
+    
   // if there are ue devices configure and  attach them
   if (ueDevices.GetN () != 0)
     {
-      NetDeviceContainer ueLteDevs (ueDevices);
-      // additional UE-specific configuration
-      Ipv4InterfaceContainer clientIpIfaces;
       NS_ASSERT_MSG (lteDlSinrCatcherVector.empty (), "Must provide an empty lteDlSinCatcherVector");
       // side effect: will create LteSpectrumValueCatchers
       // note that nobody else should resize this vector otherwise callbacks will be using invalid pointers
@@ -1996,13 +1990,14 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
       for (uint32_t u = 0; u < ueNodes.GetN (); ++u)
         {
           Ptr<Node> ue = ueNodes.Get (u);
-          Ptr<NetDevice> ueDevice = ueLteDevs.Get (u);
+          Ptr<NetDevice> ueDevice = ueDevices.Get (u);
           Ptr<LteUeNetDevice> ueLteDevice = ueDevice->GetObject<LteUeNetDevice> ();
-
+          
           // assign IP address to UEs
           Ipv4InterfaceContainer ueIpIface = epcHelper->AssignUeIpv4Address (NetDeviceContainer (ueDevice));
-          clientIpIfaces.Add (ueIpIface);
-          // set the default gateway for the UE
+          internetIpIfaces.Add (ueIpIface);
+          
+          // Set the default gateway for the UE
           Ipv4StaticRoutingHelper ipv4RoutingHelper;
           Ptr<Ipv4StaticRouting> ueStaticRouting = ipv4RoutingHelper.GetStaticRouting (ue->GetObject<Ipv4> ());
           ueStaticRouting->SetDefaultRoute (epcHelper->GetUeDefaultGatewayAddress (), 1);
@@ -2012,9 +2007,10 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
           Ptr<LteAverageChunkProcessor> monitorLteChunkProcessor  = Create<LteAverageChunkProcessor> ();
           monitorLteChunkProcessor->AddCallback (MakeCallback (&LteSpectrumValueCatcher::ReportValue, &lteDlSinrCatcherVector.at (u)));
           uePhy->GetDownlinkSpectrumPhy ()->AddDataSinrChunkProcessor (monitorLteChunkProcessor);
+          
+          // Attach one UE per eNodeB
+          lteHelper->Attach (ueDevice, bsDevices.Get(u));
         }
-      // instruct all devices to attach using the LTE initial cell selection procedure
-      lteHelper->Attach (ueDevices);
     }
 }
 
@@ -2161,41 +2157,29 @@ ConfigureUdpServers (NodeContainer servers, Time startTime, Time stopTime)
   return serverApps;
 }
 
-ApplicationContainer
+void
 ConfigureUdpClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
 {
   // Randomly distribute the start times
   Ptr<UniformRandomVariable> randomVariable = CreateObject<UniformRandomVariable> ();
   randomVariable->SetAttribute ("Max", DoubleValue (1.0));
-  randomVariable->SetStream (streamIndex++);
-  uint32_t remotePort = UDP_SERVER_PORT;
-  ApplicationContainer clientApps;
-  UdpClientHelper clientHelper (Address (), 0);
-  clientHelper.SetAttribute ("MaxPackets", UintegerValue (0xffffffff));
+  uint32_t port = UDP_SERVER_PORT;
   UintegerValue packetSizeValue;
   GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
-  clientHelper.SetAttribute ("Interval", TimeValue (interval));
-  clientHelper.SetAttribute ("PacketSize", packetSizeValue);
-  clientHelper.SetAttribute ("RemotePort", UintegerValue (remotePort));
 
-  ApplicationContainer pingApps;
   for (uint32_t i = 0; i < servers.GetN (); i++)
     {
-      Ipv4Address ip = servers.GetAddress (i, 0);
-      clientHelper.SetAttribute ("RemoteAddress", AddressValue (ip));
-      clientApps.Add (clientHelper.Install (client));
+      randomVariable->SetStream (streamIndex++);
 
-      // Seed the ARP cache by pinging early in the simulation
-      // This is a workaround until a static ARP capability is provided
-      V4PingHelper ping (ip);
-      pingApps.Add (ping.Install (client));
+      UdpClientHelper clientHelper (servers.GetAddress(i), port);
+      clientHelper.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
+      clientHelper.SetAttribute ("Interval", TimeValue (interval));
+      clientHelper.SetAttribute ("PacketSize", packetSizeValue);
+      
+      ApplicationContainer clientApp = clientHelper.Install (client.Get(i));
+      clientApp.StartWithJitter (startTime, randomVariable);
+      clientApp.Stop (stopTime);
     }
-  clientApps.StartWithJitter (startTime, randomVariable);
-  clientApps.Stop (stopTime);
-  // Add one or two pings for ARP at the beginnning of the simulation
-  pingApps.Start (Seconds (1) + Seconds (randomVariable->GetValue ()));
-  pingApps.Stop (Seconds (3));
-  return clientApps;
 }
 
 ApplicationContainer
@@ -2425,13 +2409,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // will be too constraining, so relax this.
   Config::SetDefault ("ns3::QueueBase::MaxSize", QueueSizeValue (QueueSize ("10000p")));
 
-  bool laaNodeEnabled = false;
-  // this variable is not used in all scenarios thus might not be defined
-  if (GlobalValue::GetValueByNameFailSafe ("laaNodeEnabled",booleanValue))
-    {
-      laaNodeEnabled = booleanValue.Get ();
-    }
-
   // Now set start and stop times derived from the above
   Time serverStopTime = serverStartTime + durationTime + serverLingerTime;
   Time clientStopTime = clientStartTime + durationTime;
@@ -2489,9 +2466,9 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // All application data will be sourced from the client node so that
   // it shows up on the downlink
   NodeContainer clientNodesA;  // for the backhaul application client
-  clientNodesA.Create (1); // create one remote host for sourcing traffic
+  clientNodesA.Create (bsNodesA.GetN ()); // create one remote host for sourcing traffic
   NodeContainer clientNodesB;  // for the backhaul application client
-  clientNodesB.Create (1); // create one remote host for sourcing traffic
+  clientNodesB.Create (bsNodesB.GetN ()); // create one remote host for sourcing traffic
 
   // For Wi-Fi, the client node needs to be connected to the bsNodes via a single
   // CSMA link
@@ -2517,7 +2494,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   NetDeviceContainer ueDevicesA;
   NetDeviceContainer bsDevicesB;
   NetDeviceContainer ueDevicesB;
-  NetDeviceContainer laaDevice;
 
   // Start to create the wireless devices by first creating the shared channel
   // Note:  the design of LTE requires that we use an LteHelper to
@@ -2593,35 +2569,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   internetStackHelper.Install (ueNodesB);
 
 
-  // Laa node configuration and installation.
-
-  if (laaNodeEnabled)
-    {
-      Vector3DValue vectorValue;
-      GlobalValue::GetValueByName ("laaNodePosition", vectorValue);
-      Vector3D laaPosition = vectorValue.Get ();
-
-      NodeContainer laaNode;
-      laaNode.Create (1);
-
-      laaNode.Get (0)->AggregateObject (CreateObject<ConstantPositionMobilityModel> ());
-      laaNode.Get (0)->GetObject<MobilityModel> ()->SetPosition (laaPosition);
-      //  MobilityHelper mobility;
-      //  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-      //  mobility.SetPositionAllocator (positionAlloc);
-      //  mobility.Install ();
-
-      lteHelper->SetEnbDeviceAttribute ("CsgIndication", BooleanValue (true));
-      lteHelper->SetEnbDeviceAttribute ("CsgId", UintegerValue (3));
-      lteHelper->SetUeDeviceAttribute ("CsgId", UintegerValue (3));
-      Ipv4AddressHelper internetIpv4Helper;
-      internetIpv4Helper.SetBase ("3.0.0.0", "255.0.0.0");
-      NodeContainer laaUeNodes;
-      NodeContainer laaClientNodes;
-      NetDeviceContainer laaUeDevices;
-      ConfigureLaa (lteHelper, epcHelper, internetIpv4Helper, laaNode, laaUeNodes, laaClientNodes, laaDevice, laaUeDevices, phyParams, lteDlSinrCatcherVectorA, absPattern, transport, lbtChannelAccessManagerInstallTime);
-    }
-
   //
   // Configure the right technology for each operator A and B
   //
@@ -2629,8 +2576,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   //
   // Configure operator A
   //
-
-  Ipv4Address ipBackhaulA;
+  Ipv4InterfaceContainer interfacesA;
   if (cellConfigA == WIFI)
     {
       internetStackHelper.Install (bsNodesA);
@@ -2638,17 +2584,20 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       bsDevicesA.Add (ConfigureWifiAp (bsNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
       ueDevicesA.Add (ConfigureWifiSta (ueNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
       Ipv4AddressHelper ipv4h;
-      ipv4h.SetBase ("11.0.0.0", "255.255.0.0");
-      // Add backhaul CSMA link from client to each BS
-      NodeContainer csmaNodes;
-      csmaNodes.Add (clientNodesA.Get (0));
-      csmaNodes.Add (bsNodesA);
-      NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
-      // Add IP addresses to backhaul links
-      ipv4h.Assign (csmaNewDevices);
-      //ipv4h.NewNetwork ();
-      // The IP address for the backhaul traffic source will be 11.0.0.1
-      ipBackhaulA = Ipv4Address ("11.0.0.1");
+      for(uint32_t i = 0; i < bsNodesA.GetN (); i++) {
+        std::string addr = std::to_string(i + 41) + ".0.0.0";
+        char *networkAddr = const_cast<char *>(addr.c_str()) ;
+        ipv4h.SetBase (networkAddr, "255.255.0.0");
+        // Add backhaul CSMA link from client to each BS
+        NodeContainer csmaNodes;
+        csmaNodes.Add (clientNodesA.Get (i));
+        csmaNodes.Add (bsNodesA.Get(i));
+        NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
+        // Add IP addresses to backhaul links
+        ipv4h.Assign (csmaNewDevices);
+        interfacesA.Add(ipv4h.Assign(ueDevicesA.Get(i)));
+      }
+      
     }
   else if (cellConfigA == LTE)
     {
@@ -2663,8 +2612,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
       //Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
       //ConfigureMonitor(bsNodesA, phyParams, spectrumChannel);
-      // The IP address for the backhaul traffic source will be 1.0.0.2
-      ipBackhaulA = Ipv4Address ("1.0.0.2");
     }
   else
     {
@@ -2672,9 +2619,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       lteHelper->SetEnbDeviceAttribute ("CsgIndication", BooleanValue (true));
       lteHelper->SetEnbDeviceAttribute ("CsgId", UintegerValue (1));
       lteHelper->SetUeDeviceAttribute ("CsgId", UintegerValue (1));
-      Ipv4AddressHelper internetIpv4Helper;
-      internetIpv4Helper.SetBase ("1.0.0.0", "255.0.0.0");
-      ConfigureLaa (lteHelper, epcHelper, internetIpv4Helper, bsNodesA, ueNodesA, clientNodesA, bsDevicesA, ueDevicesA, phyParams, lteDlSinrCatcherVectorA, absPattern, transport, lbtChannelAccessManagerInstallTime);
+      ConfigureLaa (lteHelper, epcHelper, interfacesA, bsNodesA, ueNodesA, clientNodesA, bsDevicesA, ueDevicesA, phyParams, lteDlSinrCatcherVectorA, absPattern, transport, lbtChannelAccessManagerInstallTime);
 
       GlobalValue::GetValueByName ("logCwChanges", booleanValue);
       if (booleanValue.Get () == true)
@@ -2728,8 +2673,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   //
   // Configure operator B
   //
+  Ipv4InterfaceContainer interfacesB;
 
-  Ipv4Address ipBackhaulB;
   if (cellConfigB == WIFI)
     {
       internetStackHelper.Install (bsNodesB);
@@ -2738,17 +2683,19 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, Ssid ("ns380211n-B")));
 
       Ipv4AddressHelper ipv4h;
-      ipv4h.SetBase ("12.0.0.0", "255.255.0.0");
-      // Add backhaul CSMA link from client to each BS
-      NodeContainer csmaNodes;
-      csmaNodes.Add (clientNodesB.Get (0));
-      csmaNodes.Add (bsNodesB);
-      NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
-      // Add IP addresses to backhaul links
-      ipv4h.Assign (csmaNewDevices);
-      //ipv4h.NewNetwork ();
-      // The IP address for the backhaul traffic source will be 12.0.0.1
-      ipBackhaulB = Ipv4Address ("12.0.0.1");
+      for(uint32_t i = 0; i < bsNodesB.GetN (); i++) {
+        std::string addr = std::to_string(i + 41) + ".0.0.0";
+        char *networkAddr = const_cast<char *>(addr.c_str()) ;
+        ipv4h.SetBase (networkAddr, "255.255.0.0");
+        NodeContainer csmaNodes;
+        csmaNodes.Add(clientNodesB.Get(i));
+        csmaNodes.Add(bsNodesB.Get(i));
+        NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
+        // Add IP addresses to backhaul links
+        ipv4h.Assign (csmaNewDevices);
+        interfacesB.Add(ipv4h.Assign(ueDevicesB.Get(i)));
+      }
+      
     }
   else if (cellConfigB == LTE)
     {
@@ -2759,8 +2706,6 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       Ipv4AddressHelper internetIpv4Helper;
       internetIpv4Helper.SetBase ("2.0.0.0", "255.0.0.0");
       ConfigureLte (lteHelper, epcHelper,  internetIpv4Helper, bsNodesB, ueNodesB, clientNodesB, bsDevicesB, ueDevicesB, phyParams, lteDlSinrCatcherVectorB, absPattern, transport);
-      // The IP address for the backhaul traffic source will be 2.0.0.2
-      ipBackhaulB = Ipv4Address ("2.0.0.2");
     }
   else
     {
@@ -2768,11 +2713,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       lteHelper->SetEnbDeviceAttribute ("CsgIndication", BooleanValue (true));
       lteHelper->SetEnbDeviceAttribute ("CsgId", UintegerValue (2));
       lteHelper->SetUeDeviceAttribute ("CsgId", UintegerValue (2));
-      Ipv4AddressHelper internetIpv4Helper;
-      internetIpv4Helper.SetBase ("2.0.0.0", "255.0.0.0");
-      ConfigureLaa (lteHelper, epcHelper,  internetIpv4Helper, bsNodesB, ueNodesB, clientNodesB, bsDevicesB, ueDevicesB, phyParams, lteDlSinrCatcherVectorB, absPattern, transport, lbtChannelAccessManagerInstallTime);
-      // The IP address for the backhaul traffic source will be 2.0.0.2
-      ipBackhaulB = Ipv4Address ("2.0.0.2");
+      ConfigureLaa (lteHelper, epcHelper, interfacesB, bsNodesB, ueNodesB, clientNodesB, bsDevicesB, ueDevicesB, phyParams, lteDlSinrCatcherVectorB, absPattern, transport, lbtChannelAccessManagerInstallTime);
 
       GlobalValue::GetValueByName ("logCwChanges", booleanValue);
       if (booleanValue.Get () == true)
@@ -2823,30 +2764,13 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     }
 
 
-  //
-  // IP addressing setup phase
-  //
 
-  Ipv4InterfaceContainer ipBsA;
-  Ipv4InterfaceContainer ipUeA;
-  Ipv4InterfaceContainer ipBsB;
-  Ipv4InterfaceContainer ipUeB;
-
-  Ipv4AddressHelper ueAddress;
-  ueAddress.SetBase ("17.0.0.0", "255.255.0.0");
-  ipBsA = ueAddress.Assign (bsDevicesA);
-  ipUeA = ueAddress.Assign (ueDevicesA);
-
-  ueAddress.SetBase ("18.0.0.0", "255.255.0.0");
-  ipBsB = ueAddress.Assign (bsDevicesB);
-  ipUeB = ueAddress.Assign (ueDevicesB);
-
-  // Routing
-  // WiFi nodes will trigger an association callback, which can invoke
-  // a method to configure the appropriate routes on client and STA
-  Config::Connect ("/NodeList/*/DeviceList/*/Mac/Assoc", MakeCallback (&ConfigureRouteForStation));
-  // Deassociation logging
-  Config::Connect ("/NodeList/*/DeviceList/*/Mac/DeAssoc", MakeCallback (&DeassociationLogging));
+  // // Routing
+  // // WiFi nodes will trigger an association callback, which can invoke
+  // // a method to configure the appropriate routes on client and STA
+  // Config::Connect ("/NodeList/*/DeviceList/*/Mac/Assoc", MakeCallback (&ConfigureRouteForStation));
+  // // Deassociation logging
+  // Config::Connect ("/NodeList/*/DeviceList/*/Mac/DeAssoc", MakeCallback (&DeassociationLogging));
 
   //
   // Application setup phase
@@ -2876,26 +2800,15 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       // UEs
       NodeContainer nonVoiceUeNodesB;
       Ipv4InterfaceContainer nonVoiceIpUeB;
-      found = GlobalValue::GetValueByNameFailSafe ("voiceEnabled", booleanValue);
-      if (found && (booleanValue.Get () == true) && (ueNodesB.GetN () >= 4))
-        {
-          // Skip the 0th and 1st indices; they will be used for voice
-          for (uint32_t index = 2; index < ueNodesB.GetN (); index++)
-            {
-              nonVoiceUeNodesB.Add (ueNodesB.Get (index));
-              nonVoiceIpUeB.Add (ipUeB.Get (index));
-            }
-        }
-      else
-        {
-          // NodeContainer has no copy constructor or assignment operator
-          // so we do it manually here
-          for (uint32_t index = 0; index < ueNodesB.GetN (); index++)
-            {
-              nonVoiceUeNodesB.Add (ueNodesB.Get (index));
-              nonVoiceIpUeB.Add (ipUeB.Get (index));
-            }
-        }
+
+          // // NodeContainer has no copy constructor or assignment operator
+          // // so we do it manually here
+          // for (uint32_t index = 0; index < ueNodesB.GetN (); index++)
+          //   {
+          //     nonVoiceUeNodesB.Add (ueNodesB.Get (index));
+          //     nonVoiceIpUeB.Add (ipUeB.Get (index));
+          //   }
+        
       BooleanValue isShut;
       GlobalValue::GetValueByName("shutA",isShut);
       bool shutA=isShut.Get();
@@ -2905,19 +2818,19 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       std::cout<<"shutB?  "<<shutB<<std::endl;
       if (transport == UDP)
         {
-          ApplicationContainer serverApps, clientApps;
+          ApplicationContainer serverApps;
           serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
-          if(!shutA) clientApps.Add (ConfigureUdpClients (clientNodesA, ipUeA, clientStartTime, clientStopTime, udpInterval));
-          else clientApps.Add (ConfigureUdpClients (clientNodesA, ipUeA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval));
-          serverApps.Add (ConfigureUdpServers (nonVoiceUeNodesB, serverStartTime, serverStopTime));
-          if(!shutB) clientApps.Add (ConfigureUdpClients (clientNodesB, nonVoiceIpUeB, clientStartTime, clientStopTime, udpInterval));
-          else clientApps.Add (ConfigureUdpClients (clientNodesB, nonVoiceIpUeB,  Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval));
+          if(!shutA) ConfigureUdpClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
+          else ConfigureUdpClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
+          if(!shutB) ConfigureUdpClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
+          else ConfigureUdpClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
         }
       else if (transport == FTP)
         {
           ApplicationContainer ftpServerApps, ftpClientApps;
           ftpServerApps.Add (ConfigureFtpServers (ueNodesA, serverStartTime));
-          ftpClientApps.Add (ConfigureFtpClients (clientNodesA, ipUeA, clientStartTime));
+          ftpClientApps.Add (ConfigureFtpClients (clientNodesA, interfacesA, clientStartTime));
           // Start file transfer arrival process in both networks
           double firstArrivalA = ftpArrivalsA->GetValue ();
           NS_LOG_DEBUG ("First FTP arrival for operator A at time " << clientStartTime.GetSeconds () + firstArrivalA);
@@ -2933,7 +2846,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
         {
           ApplicationContainer tcpServerApps, tcpClientApps;
           tcpServerApps.Add (ConfigureTcpServers (ueNodesA, serverStartTime));
-          tcpClientApps.Add (ConfigureTcpClients (clientNodesA, ipUeA, clientStartTime));
+          tcpClientApps.Add (ConfigureTcpClients (clientNodesA, interfacesA, clientStartTime));
           // Start file transfer arrival process
           double firstArrivalA = ftpArrivalsA->GetValue ();
           NS_LOG_DEBUG ("First FTP arrival for operator A at time " << clientStartTime.GetSeconds () + firstArrivalA);
@@ -2946,85 +2859,85 @@ ConfigureAndRunScenario (Config_e cellConfigA,
           Simulator::Schedule (clientStartTime + Seconds (firstArrivalB), &StartFileTransfer, ftpArrivalsB, tcpClientAppsB, nextClient, clientStopTime);
         }
       found = GlobalValue::GetValueByNameFailSafe ("voiceEnabled", booleanValue);
-      if (found && (booleanValue.Get () == true))
-        {
-          // Add voice flows to up to two UEs in the operatorB network only
-          Ptr<Node> voiceSender;
-          Ptr<Node> voiceReceiver0;
-          Ptr<Node> voiceReceiver1;
-          Ptr<VoiceApplication> voiceAppSender0;
-          Ptr<VoiceApplication> voiceAppReceiver0;
-          Ptr<VoiceApplication> voiceAppSender1;
-          Ptr<VoiceApplication> voiceAppReceiver1;
-          Ipv4Address remoteIp0;
-          Ipv4Address remoteIp1;
-          Ipv4Address remoteIp2;
-          std::string context;
-          bool success;
+      // if (found && (booleanValue.Get () == true))
+      //   {
+      //     // Add voice flows to up to two UEs in the operatorB network only
+      //     Ptr<Node> voiceSender;
+      //     Ptr<Node> voiceReceiver0;
+      //     Ptr<Node> voiceReceiver1;
+      //     Ptr<VoiceApplication> voiceAppSender0;
+      //     Ptr<VoiceApplication> voiceAppReceiver0;
+      //     Ptr<VoiceApplication> voiceAppSender1;
+      //     Ptr<VoiceApplication> voiceAppReceiver1;
+      //     Ipv4Address remoteIp0;
+      //     Ipv4Address remoteIp1;
+      //     Ipv4Address remoteIp2;
+      //     std::string context;
+      //     bool success;
 
-          // Network B
-          voiceSender = clientNodesB.Get (0);
-          voiceReceiver0 = ueNodesB.Get (0);
-          if (ueNodesB.GetN () > 1)
-            {
-              voiceReceiver1 = ueNodesB.Get (1);
-            }
+      //     // Network B
+      //     voiceSender = clientNodesB.Get (0);
+      //     voiceReceiver0 = ueNodesB.Get (0);
+      //     if (ueNodesB.GetN () > 1)
+      //       {
+      //         voiceReceiver1 = ueNodesB.Get (1);
+      //       }
 
-          voiceAppSender0 = CreateObject<VoiceApplication> ();
-          voiceAppSender0->SetStartTime (clientStartTime);
-          voiceAppSender0->SetStopTime (clientStopTime);
-          voiceSender->AddApplication (voiceAppSender0);
-          voiceAppReceiver0 = CreateObject<VoiceApplication> ();
-          voiceAppReceiver0->SetStartTime (serverStartTime);
-          voiceAppReceiver0->SetStopTime (serverStopTime);
-          // send in downlink direction only
-          voiceAppReceiver0->SetAttribute ("SendEnabled", BooleanValue (false));
-          voiceReceiver0->AddApplication (voiceAppReceiver0);
-          context = NodeIdToContext (voiceReceiver0->GetId ());
-          success = voiceAppReceiver0->TraceConnect("Rx", context, MakeCallback(&VoiceRxCb));
-          NS_ASSERT (success);
+      //     voiceAppSender0 = CreateObject<VoiceApplication> ();
+      //     voiceAppSender0->SetStartTime (clientStartTime);
+      //     voiceAppSender0->SetStopTime (clientStopTime);
+      //     voiceSender->AddApplication (voiceAppSender0);
+      //     voiceAppReceiver0 = CreateObject<VoiceApplication> ();
+      //     voiceAppReceiver0->SetStartTime (serverStartTime);
+      //     voiceAppReceiver0->SetStopTime (serverStopTime);
+      //     // send in downlink direction only
+      //     voiceAppReceiver0->SetAttribute ("SendEnabled", BooleanValue (false));
+      //     voiceReceiver0->AddApplication (voiceAppReceiver0);
+      //     context = NodeIdToContext (voiceReceiver0->GetId ());
+      //     success = voiceAppReceiver0->TraceConnect("Rx", context, MakeCallback(&VoiceRxCb));
+      //     NS_ASSERT (success);
 
-          if (ueNodesB.GetN () > 1)
-            {
-              voiceAppSender1 = CreateObject<VoiceApplication> ();
-              voiceAppSender1->SetStartTime (clientStartTime);
-              voiceAppSender1->SetStopTime (clientStopTime);
-              voiceSender->AddApplication (voiceAppSender1);
-              voiceAppReceiver1 = CreateObject<VoiceApplication> ();
-              voiceAppReceiver1->SetStartTime (serverStartTime);
-              voiceAppReceiver1->SetStopTime (serverStopTime);
-              // send in downlink direction only
-              voiceAppReceiver1->SetAttribute ("SendEnabled", BooleanValue (false));
-              voiceReceiver1->AddApplication (voiceAppReceiver1);
-              context = NodeIdToContext (voiceReceiver1->GetId ());
-              success = voiceAppReceiver1->TraceConnect("Rx", context, MakeCallback(&VoiceRxCb));
-              NS_ASSERT (success);
-            }
-          else
-            {
-              voiceAppSender1 = 0;
-              voiceAppReceiver1 = 0;
-            }
+      //     if (ueNodesB.GetN () > 1)
+      //       {
+      //         voiceAppSender1 = CreateObject<VoiceApplication> ();
+      //         voiceAppSender1->SetStartTime (clientStartTime);
+      //         voiceAppSender1->SetStopTime (clientStopTime);
+      //         voiceSender->AddApplication (voiceAppSender1);
+      //         voiceAppReceiver1 = CreateObject<VoiceApplication> ();
+      //         voiceAppReceiver1->SetStartTime (serverStartTime);
+      //         voiceAppReceiver1->SetStopTime (serverStopTime);
+      //         // send in downlink direction only
+      //         voiceAppReceiver1->SetAttribute ("SendEnabled", BooleanValue (false));
+      //         voiceReceiver1->AddApplication (voiceAppReceiver1);
+      //         context = NodeIdToContext (voiceReceiver1->GetId ());
+      //         success = voiceAppReceiver1->TraceConnect("Rx", context, MakeCallback(&VoiceRxCb));
+      //         NS_ASSERT (success);
+      //       }
+      //     else
+      //       {
+      //         voiceAppSender1 = 0;
+      //         voiceAppReceiver1 = 0;
+      //       }
 
-          // Configure the local address for each receiver (i.e. bind() to
-          // the voice port) via the 'Local' attribute
-          voiceAppReceiver0->SetAttribute ("Local", AddressValue (InetSocketAddress (Ipv4Address::GetAny (), VOICE_PORT)));
-          if (voiceAppReceiver1)
-            {
-              voiceAppReceiver1->SetAttribute ("Local", AddressValue (InetSocketAddress (Ipv4Address::GetAny (), VOICE_PORT)));
-            }
+      //     // Configure the local address for each receiver (i.e. bind() to
+      //     // the voice port) via the 'Local' attribute
+      //     voiceAppReceiver0->SetAttribute ("Local", AddressValue (InetSocketAddress (Ipv4Address::GetAny (), VOICE_PORT)));
+      //     if (voiceAppReceiver1)
+      //       {
+      //         voiceAppReceiver1->SetAttribute ("Local", AddressValue (InetSocketAddress (Ipv4Address::GetAny (), VOICE_PORT)));
+      //       }
 
-          // Configure the peer address for sender via the 'Remote' attribute
-          remoteIp0 = ipUeB.GetAddress (0, 0);
-          NS_LOG_DEBUG ("IP 0 " << remoteIp0);
-          voiceAppSender0->SetAttribute ("Remote", AddressValue (InetSocketAddress (remoteIp0, VOICE_PORT)));
-          if (voiceAppSender1)
-            {
-              remoteIp1 = ipUeB.GetAddress (1, 0);
-              NS_LOG_DEBUG ("IP 1 " << remoteIp1);
-              voiceAppSender1->SetAttribute ("Remote", AddressValue (InetSocketAddress (remoteIp1, VOICE_PORT)));
-            }
-        }
+      //     // Configure the peer address for sender via the 'Remote' attribute
+      //     remoteIp0 = ipUeB.GetAddress (0, 0);
+      //     NS_LOG_DEBUG ("IP 0 " << remoteIp0);
+      //     voiceAppSender0->SetAttribute ("Remote", AddressValue (InetSocketAddress (remoteIp0, VOICE_PORT)));
+      //     if (voiceAppSender1)
+      //       {
+      //         remoteIp1 = ipUeB.GetAddress (1, 0);
+      //         NS_LOG_DEBUG ("IP 1 " << remoteIp1);
+      //         voiceAppSender1->SetAttribute ("Remote", AddressValue (InetSocketAddress (remoteIp1, VOICE_PORT)));
+      //       }
+      //   }
     }
 
   // All of the client apps are on node clientNodes

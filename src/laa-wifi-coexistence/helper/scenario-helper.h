@@ -83,7 +83,7 @@ ConfigureMonitor (NodeContainer bsNodesA, struct PhyParams phyParams, Ptr<Spectr
 ApplicationContainer
 ConfigureUdpServers (NodeContainer servers, Time startTime, Time stopTime);
 
-ApplicationContainer
+void
 ConfigureUdpClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval);
 
 ApplicationContainer
