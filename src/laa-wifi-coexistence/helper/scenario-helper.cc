@@ -1896,7 +1896,8 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
   // The EpcHelper will then take care of connecting the PGW/SGW node to the eNBs
 
   // uf there are client nodes configure link to them
-    Ptr<Node> clientNode = clientNodes.Get (0);
+  for(uint32_t i = 0; i < clientNodes.GetN (); i++) {
+    Ptr<Node> clientNode = clientNodes.Get (i);
     Ptr<Node> pgw = epcHelper->GetPgwNode ();
     PointToPointHelper p2ph;
     p2ph.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("100Gb/s")));
@@ -1904,7 +1905,9 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
     p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0.0)));
     NetDeviceContainer internetDevices = p2ph.Install (pgw, clientNode);
     Ipv4AddressHelper ipv4h;
-    ipv4h.SetBase ("1.0.0.0", "255.0.0.0");
+    std::string addr = std::to_string(i + 1) + ".0.0.0";
+    Ipv4Address networkAddr(addr.c_str());
+    ipv4h.SetBase (networkAddr, "255.0.0.0");
     Ipv4InterfaceContainer internetIpIface = ipv4h.Assign (internetDevices);
       
     // interface 0 is localhost, 1 is the p2p device
@@ -1914,7 +1917,7 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
     Ipv4StaticRoutingHelper ipv4RoutingHelper;
     Ptr<Ipv4StaticRouting> clientNodeStaticRouting = ipv4RoutingHelper.GetStaticRouting (clientNode->GetObject<Ipv4> ());
     clientNodeStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
-
+  }
 
   // LTE configuration parametes
   lteHelper->SetSchedulerType ("ns3::PfFfMacScheduler");
