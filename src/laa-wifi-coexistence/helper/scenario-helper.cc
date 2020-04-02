@@ -2113,7 +2113,7 @@ ConfigureWifi (NodeContainer bsNodes, NodeContainer ueNodes, Ipv4InterfaceContai
 }
 
 NetDeviceContainer
-ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, Ssid ssid)
+ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, char ssidLastCh)
 {
   QueueSizeValue queueSize;
   GlobalValue::GetValueByName ("wifiQueueMaxSize", queueSize);
@@ -2146,7 +2146,7 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
 
   for (uint32_t i = 0; i < bsNodes.GetN (); i++)
     {
-      char ch = 'A' + i; 
+      char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
       Ssid tmp(ss);
@@ -2182,7 +2182,7 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
 }
 
 NetDeviceContainer
-ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, Ssid ssid)
+ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, char ssidLastCh)
 {
   QueueSizeValue queueSize;
   GlobalValue::GetValueByName ("wifiQueueMaxSize", queueSize);
@@ -2216,7 +2216,7 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
 
   for (uint32_t i = 0; i < ueNodes.GetN (); i++)
     {
-      char ch = 'A' + i; 
+      char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
       Ssid tmp(ss);
@@ -2733,8 +2733,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     {
       internetStackHelper.Install (bsNodesA);
       Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
-      bsDevicesA.Add (ConfigureWifiAp (bsNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
-      ueDevicesA.Add (ConfigureWifiSta (ueNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
+      bsDevicesA.Add (ConfigureWifiAp (bsNodesA, phyParams, spectrumChannel, 'A'));
+      ueDevicesA.Add (ConfigureWifiSta (ueNodesA, phyParams, spectrumChannel, 'A'));
       Ipv4AddressHelper ipv4h;
       ipv4h.SetBase ("11.0.0.0", "255.255.0.0");
       // Add backhaul CSMA link from client to each BS
@@ -2831,8 +2831,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     {
       internetStackHelper.Install (bsNodesB);
       Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
-      bsDevicesB.Add (ConfigureWifiAp (bsNodesB, phyParams, spectrumChannel, Ssid ("ns380211n-B")));
-      ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, Ssid ("ns380211n-B")));
+      bsDevicesB.Add (ConfigureWifiAp (bsNodesB, phyParams, spectrumChannel, 'F'));
+      ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, 'F'));
 
       Ipv4AddressHelper ipv4h;
       ipv4h.SetBase ("12.0.0.0", "255.255.0.0");
