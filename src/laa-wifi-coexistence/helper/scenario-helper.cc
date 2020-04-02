@@ -1885,7 +1885,7 @@ ConfigureLte (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
 }
 
 void
-ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4InterfaceContainer& internetIpIfaces, NodeContainer bsNodes,
+ConfigureLaa (uint32_t ip1num, Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ipv4InterfaceContainer& internetIpIfaces, NodeContainer bsNodes,
               NodeContainer ueNodes, NodeContainer clientNodes, NetDeviceContainer& bsDevices, NetDeviceContainer& ueDevices, struct PhyParams phyParams,
               std::vector<LteSpectrumValueCatcher>& lteDlSinrCatcherVector, std::bitset<40> absPattern, Transport_e transport, Time lbtChannelAccessManagerInstallTime)
 {
@@ -1905,7 +1905,7 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
     p2ph.SetChannelAttribute ("Delay", TimeValue (Seconds (0.0)));
     NetDeviceContainer internetDevices = p2ph.Install (pgw, clientNode);
     Ipv4AddressHelper ipv4h;
-    std::string addr = std::to_string(i + 1) + ".0.0.0";
+    std::string addr = std::to_string(i + ip1num) + ".0.0.0";
     Ipv4Address networkAddr(addr.c_str());
     ipv4h.SetBase (networkAddr, "255.0.0.0");
     Ipv4InterfaceContainer internetIpIface = ipv4h.Assign (internetDevices);
@@ -2017,6 +2017,101 @@ ConfigureLaa (Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelper> epcHelper, Ip
     }
 }
 
+void
+ConfigureWifi (NodeContainer bsNodes, NodeContainer ueNodes, Ipv4InterfaceContainer& interfaces, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, uint32_t ip1num)
+{
+  QueueSizeValue queueSize;
+  GlobalValue::GetValueByName ("wifiQueueMaxSize", queueSize);
+  // Original
+  // Config::SetDefault ("ns3::WifiMacQueue::MaxSize", queueSize);
+  Config::SetDefault ("ns3::QueueBase::MaxSize", queueSize);
+  UintegerValue uValue;
+  GlobalValue::GetValueByName ("wifiQueueMaxDelay", uValue);
+  Config::SetDefault ("ns3::WifiMacQueue::MaxDelay", TimeValue (MilliSeconds (uValue.Get ())));
+  NetDeviceContainer apDevices, staDevices;
+  SpectrumWifiPhyHelper bsSpectrumPhy = SpectrumWifiPhyHelper::Default ();
+  SpectrumWifiPhyHelper ueSpectrumPhy = SpectrumWifiPhyHelper::Default ();
+  bsSpectrumPhy.SetChannel (channel);
+  // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only.
+  // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
+  bsSpectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_bsTxGain));
+  bsSpectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_bsRxGain));
+  bsSpectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
+  bsSpectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
+  bsSpectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
+  bsSpectrumPhy.Set ("Antennas", UintegerValue (2));
+  bsSpectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  bsSpectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+  bsSpectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+  ueSpectrumPhy.SetChannel (channel);
+  ueSpectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_ueTxGain));
+  ueSpectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_ueRxGain));
+  ueSpectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
+  ueSpectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
+  ueSpectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
+  ueSpectrumPhy.Set ("Antennas", UintegerValue (2));
+  ueSpectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  ueSpectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+  ueSpectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+  WifiHelper bsWifi, ueWifi;
+  bsWifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+  bsWifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);  
+  ueWifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+  ueWifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
+  
+  Ssid ssid = Ssid ("ns380211n-A");
+  WifiMacHelper bsMac, ueMac;
+  bsMac.SetType ("ns3::ApWifiMac",
+               "Ssid", SsidValue (ssid),
+               "EnableBeaconJitter", BooleanValue (true));
+  ueMac.SetType ("ns3::StaWifiMac",
+               "Ssid", SsidValue (ssid),
+               "ActiveProbing", BooleanValue (false));
+
+  for (uint32_t i = 0; i < bsNodes.GetN (); i++)
+    {
+      //uint32_t channelNumber = 36 + 4 * (i%4);
+      uint32_t channelNumber = 36;
+      bsSpectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
+      ueSpectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
+      NetDeviceContainer apDevice = bsWifi.Install (bsSpectrumPhy, bsMac, bsNodes.Get (i));
+      NetDeviceContainer staDevice = ueWifi.Install (ueSpectrumPhy, ueMac, ueNodes.Get (i));
+      apDevices.Add (apDevice);
+      staDevices.Add (staDevice);
+      std::string addr = std::to_string(i + ip1num) + ".0.0.0";
+      char *networkAddr = const_cast<char *>(addr.c_str()) ;
+      Ipv4AddressHelper ipv4h;
+      ipv4h.SetBase (networkAddr, "255.255.0.0");
+      ipv4h.Assign (apDevice);
+      interfaces.Add(ipv4h.Assign (staDevice));
+    }
+   // Set channel width
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth", UintegerValue (20));
+
+  // Set guard interval
+  Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
+
+  BooleanValue booleanValue;
+  bool found;
+  found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      bsSpectrumPhy.EnablePcap ("laa-wifi-ap", apDevices);
+      ueSpectrumPhy.EnablePcap ("laa-wifi-ue", staDevices);
+    }
+  found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      AsciiTraceHelper ascii;
+      std::string prefix = "laa-wifi-ap";
+      bsSpectrumPhy.EnableAscii (prefix, apDevices);
+      prefix = "laa-wifi-ue";
+      ueSpectrumPhy.EnableAscii (prefix, staDevices);
+    }
+}
+
 NetDeviceContainer
 ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<SpectrumChannel> channel, Ssid ssid)
 {
@@ -2048,12 +2143,16 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
   WifiMacHelper mac;
 
-  mac.SetType ("ns3::ApWifiMac",
-               "Ssid", SsidValue (ssid),
-               "EnableBeaconJitter", BooleanValue (true));
 
   for (uint32_t i = 0; i < bsNodes.GetN (); i++)
     {
+      char ch = 'A' + i; 
+      std::string ss = "ns380211n-";
+      ss.push_back(ch);
+      Ssid tmp(ss);
+      mac.SetType ("ns3::ApWifiMac",
+                   "Ssid", SsidValue (tmp),
+                   "EnableBeaconJitter", BooleanValue (true));
       //uint32_t channelNumber = 36 + 4 * (i%4);
       uint32_t channelNumber = 36;
       spectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
@@ -2114,12 +2213,16 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
   WifiMacHelper mac;
 
-  mac.SetType ("ns3::StaWifiMac",
-               "Ssid", SsidValue (ssid),
-               "ActiveProbing", BooleanValue (false));
 
   for (uint32_t i = 0; i < ueNodes.GetN (); i++)
     {
+      char ch = 'A' + i; 
+      std::string ss = "ns380211n-";
+      ss.push_back(ch);
+      Ssid tmp(ss);
+      mac.SetType ("ns3::StaWifiMac",
+                   "Ssid", SsidValue (tmp),
+                   "ActiveProbing", BooleanValue (false));
       //uint32_t channelNumber = 36 + 4 * (i%4);
       uint32_t channelNumber = 36;
       spectrumPhy.Set ("ChannelNumber", UintegerValue (channelNumber));
@@ -2160,8 +2263,45 @@ ConfigureUdpServers (NodeContainer servers, Time startTime, Time stopTime)
   return serverApps;
 }
 
+ApplicationContainer
+ConfigureUdpWifiClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
+{
+  // Randomly distribute the start times
+  Ptr<UniformRandomVariable> randomVariable = CreateObject<UniformRandomVariable> ();
+  randomVariable->SetAttribute ("Max", DoubleValue (1.0));
+  randomVariable->SetStream (streamIndex++);
+  uint32_t remotePort = UDP_SERVER_PORT;
+  ApplicationContainer clientApps;
+  UdpClientHelper clientHelper (Address (), 0);
+  clientHelper.SetAttribute ("MaxPackets", UintegerValue (0xffffffff));
+  UintegerValue packetSizeValue;
+  GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
+  clientHelper.SetAttribute ("Interval", TimeValue (interval));
+  clientHelper.SetAttribute ("PacketSize", packetSizeValue);
+  clientHelper.SetAttribute ("RemotePort", UintegerValue (remotePort));
+
+  ApplicationContainer pingApps;
+  for (uint32_t i = 0; i < servers.GetN (); i++)
+    {
+      Ipv4Address ip = servers.GetAddress (i, 0);
+      clientHelper.SetAttribute ("RemoteAddress", AddressValue (ip));
+      clientApps.Add (clientHelper.Install (client));
+
+      // Seed the ARP cache by pinging early in the simulation
+      // This is a workaround until a static ARP capability is provided
+      V4PingHelper ping (ip);
+      pingApps.Add (ping.Install (client));
+    }
+  clientApps.StartWithJitter (startTime, randomVariable);
+  clientApps.Stop (stopTime);
+  // Add one or two pings for ARP at the beginnning of the simulation
+  pingApps.Start (Seconds (1) + Seconds (randomVariable->GetValue ()));
+  pingApps.Stop (Seconds (3));
+  return clientApps;
+}
+
 void
-ConfigureUdpClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
+ConfigureUdpLAAClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
 {
   // Randomly distribute the start times
   Ptr<UniformRandomVariable> randomVariable = CreateObject<UniformRandomVariable> ();
@@ -2468,10 +2608,18 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
   // All application data will be sourced from the client node so that
   // it shows up on the downlink
-  NodeContainer clientNodesA;  // for the backhaul application client
-  clientNodesA.Create (bsNodesA.GetN ()); // create one remote host for sourcing traffic
-  NodeContainer clientNodesB;  // for the backhaul application client
-  clientNodesB.Create (bsNodesB.GetN ()); // create one remote host for sourcing traffic
+  NodeContainer clientNodesA, clientNodesB;  // for the backhaul application client
+
+  if(cellConfigA == WIFI) {
+    clientNodesA.Create (1); // create one remote host for sourcing traffic
+  } else {
+    clientNodesA.Create (bsNodesA.GetN ()); // create one remote host for sourcing traffic
+  }
+  if(cellConfigB == WIFI) {
+    clientNodesB.Create (1); // create one remote host for sourcing traffic
+  } else {
+    clientNodesB.Create (bsNodesA.GetN ()); // create one remote host for sourcing traffic
+  }
 
   // For Wi-Fi, the client node needs to be connected to the bsNodes via a single
   // CSMA link
@@ -2579,6 +2727,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   //
   // Configure operator A
   //
+  Ipv4Address ipBackhaulA;
   Ipv4InterfaceContainer interfacesA;
   if (cellConfigA == WIFI)
     {
@@ -2587,20 +2736,20 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       bsDevicesA.Add (ConfigureWifiAp (bsNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
       ueDevicesA.Add (ConfigureWifiSta (ueNodesA, phyParams, spectrumChannel, Ssid ("ns380211n-A")));
       Ipv4AddressHelper ipv4h;
-      for(uint32_t i = 0; i < bsNodesA.GetN (); i++) {
-        std::string addr = std::to_string(i + 41) + ".0.0.0";
-        char *networkAddr = const_cast<char *>(addr.c_str()) ;
-        ipv4h.SetBase (networkAddr, "255.255.0.0");
-        // Add backhaul CSMA link from client to each BS
-        NodeContainer csmaNodes;
-        csmaNodes.Add (clientNodesA.Get (i));
-        csmaNodes.Add (bsNodesA.Get(i));
-        NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
-        // Add IP addresses to backhaul links
-        ipv4h.Assign (csmaNewDevices);
-        interfacesA.Add(ipv4h.Assign(ueDevicesA.Get(i)));
-      }
-      
+      ipv4h.SetBase ("11.0.0.0", "255.255.0.0");
+      // Add backhaul CSMA link from client to each BS
+      NodeContainer csmaNodes;
+      csmaNodes.Add (clientNodesA.Get (0));
+      csmaNodes.Add (bsNodesA);
+      NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
+      // Add IP addresses to backhaul links
+      ipv4h.Assign (csmaNewDevices);
+      //ipv4h.NewNetwork ();
+      // The IP address for the backhaul traffic source will be 11.0.0.1
+      ipBackhaulA = Ipv4Address ("11.0.0.1");
+      ipv4h.SetBase ("17.0.0.0", "255.255.0.0");
+      ipv4h.Assign (bsDevicesA);
+      interfacesA = ipv4h.Assign (ueDevicesA);
     }
   else if (cellConfigA == LTE)
     {
@@ -2622,7 +2771,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       lteHelper->SetEnbDeviceAttribute ("CsgIndication", BooleanValue (true));
       lteHelper->SetEnbDeviceAttribute ("CsgId", UintegerValue (1));
       lteHelper->SetUeDeviceAttribute ("CsgId", UintegerValue (1));
-      ConfigureLaa (lteHelper, epcHelper, interfacesA, bsNodesA, ueNodesA, clientNodesA, bsDevicesA, ueDevicesA, phyParams, lteDlSinrCatcherVectorA, absPattern, transport, lbtChannelAccessManagerInstallTime);
+      ConfigureLaa (1, lteHelper, epcHelper, interfacesA, bsNodesA, ueNodesA, clientNodesA, bsDevicesA, ueDevicesA, phyParams, lteDlSinrCatcherVectorA, absPattern, transport, lbtChannelAccessManagerInstallTime);
 
       GlobalValue::GetValueByName ("logCwChanges", booleanValue);
       if (booleanValue.Get () == true)
@@ -2677,7 +2826,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // Configure operator B
   //
   Ipv4InterfaceContainer interfacesB;
-
+  Ipv4Address ipBackhaulB;
   if (cellConfigB == WIFI)
     {
       internetStackHelper.Install (bsNodesB);
@@ -2686,19 +2835,20 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, Ssid ("ns380211n-B")));
 
       Ipv4AddressHelper ipv4h;
-      for(uint32_t i = 0; i < bsNodesB.GetN (); i++) {
-        std::string addr = std::to_string(i + 41) + ".0.0.0";
-        char *networkAddr = const_cast<char *>(addr.c_str()) ;
-        ipv4h.SetBase (networkAddr, "255.255.0.0");
-        NodeContainer csmaNodes;
-        csmaNodes.Add(clientNodesB.Get(i));
-        csmaNodes.Add(bsNodesB.Get(i));
-        NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
-        // Add IP addresses to backhaul links
-        ipv4h.Assign (csmaNewDevices);
-        interfacesB.Add(ipv4h.Assign(ueDevicesB.Get(i)));
-      }
-      
+      ipv4h.SetBase ("12.0.0.0", "255.255.0.0");
+      // Add backhaul CSMA link from client to each BS
+      NodeContainer csmaNodes;
+      csmaNodes.Add (clientNodesB.Get (0));
+      csmaNodes.Add (bsNodesB);
+      NetDeviceContainer csmaNewDevices = csmaHelper.Install (csmaNodes);
+      // Add IP addresses to backhaul links
+      ipv4h.Assign (csmaNewDevices);
+      //ipv4h.NewNetwork ();
+      // The IP address for the backhaul traffic source will be 12.0.0.1
+      ipBackhaulB = Ipv4Address ("12.0.0.1");
+      ipv4h.SetBase ("18.0.0.0", "255.255.0.0");
+      ipv4h.Assign (bsDevicesB);
+      interfacesB = ipv4h.Assign (ueDevicesB);
     }
   else if (cellConfigB == LTE)
     {
@@ -2716,7 +2866,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       lteHelper->SetEnbDeviceAttribute ("CsgIndication", BooleanValue (true));
       lteHelper->SetEnbDeviceAttribute ("CsgId", UintegerValue (2));
       lteHelper->SetUeDeviceAttribute ("CsgId", UintegerValue (2));
-      ConfigureLaa (lteHelper, epcHelper, interfacesB, bsNodesB, ueNodesB, clientNodesB, bsDevicesB, ueDevicesB, phyParams, lteDlSinrCatcherVectorB, absPattern, transport, lbtChannelAccessManagerInstallTime);
+      ConfigureLaa (41, lteHelper, epcHelper, interfacesB, bsNodesB, ueNodesB, clientNodesB, bsDevicesB, ueDevicesB, phyParams, lteDlSinrCatcherVectorB, absPattern, transport, lbtChannelAccessManagerInstallTime);
 
       GlobalValue::GetValueByName ("logCwChanges", booleanValue);
       if (booleanValue.Get () == true)
@@ -2768,12 +2918,12 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
 
 
-  // // Routing
-  // // WiFi nodes will trigger an association callback, which can invoke
-  // // a method to configure the appropriate routes on client and STA
-  // Config::Connect ("/NodeList/*/DeviceList/*/Mac/Assoc", MakeCallback (&ConfigureRouteForStation));
-  // // Deassociation logging
-  // Config::Connect ("/NodeList/*/DeviceList/*/Mac/DeAssoc", MakeCallback (&DeassociationLogging));
+  // Routing
+  // WiFi nodes will trigger an association callback, which can invoke
+  // a method to configure the appropriate routes on client and STA
+  Config::Connect ("/NodeList/*/DeviceList/*/Mac/Assoc", MakeCallback (&ConfigureRouteForStation));
+  // Deassociation logging
+  Config::Connect ("/NodeList/*/DeviceList/*/Mac/DeAssoc", MakeCallback (&DeassociationLogging));
 
   //
   // Application setup phase
@@ -2821,13 +2971,30 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       std::cout<<"shutB?  "<<shutB<<std::endl;
       if (transport == UDP)
         {
-          ApplicationContainer serverApps;
-          serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
-          if(!shutA) ConfigureUdpClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
-          else ConfigureUdpClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
-          serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
-          if(!shutB) ConfigureUdpClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
-          else ConfigureUdpClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          if(cellConfigA == LAA) {
+            ApplicationContainer serverApps;
+            serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
+            if(!shutA) ConfigureUdpLAAClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpLAAClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          } else {
+            ApplicationContainer serverApps;
+            serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
+            if(!shutA) ConfigureUdpWifiClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpWifiClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          
+          }
+         
+          if(cellConfigB == LAA) {
+            ApplicationContainer serverApps;
+            serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
+            if(!shutB) ConfigureUdpLAAClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpLAAClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          } else {
+            ApplicationContainer serverApps;
+            serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
+            if(!shutB) ConfigureUdpWifiClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpWifiClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+          }
         }
       else if (transport == FTP)
         {
