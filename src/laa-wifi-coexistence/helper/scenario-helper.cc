@@ -2635,6 +2635,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   //  client <-> bsN link for each network
 
   CsmaHelper csmaHelper;
+  csmaHelper.SetChannelAttribute ("DataRate", StringValue ("100Gb/s"));
+  csmaHelper.SetChannelAttribute ("Delay", TimeValue (Seconds (0.0)));
 
   //
   // Wireless setup phase
@@ -2831,8 +2833,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     {
       internetStackHelper.Install (bsNodesB);
       Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
-      bsDevicesB.Add (ConfigureWifiAp (bsNodesB, phyParams, spectrumChannel, 'F'));
-      ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, 'F'));
+      bsDevicesB.Add (ConfigureWifiAp (bsNodesB, phyParams, spectrumChannel, 'K'));
+      ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, 'K'));
 
       Ipv4AddressHelper ipv4h;
       ipv4h.SetBase ("12.0.0.0", "255.255.0.0");
