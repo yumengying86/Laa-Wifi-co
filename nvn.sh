@@ -14,12 +14,11 @@
 
 # pure wifi, nvn
 int=1
-mkdir 10m_100s_nvn_pure_wifi
+mkdir new_10m_100s_nvn_pure_wifi_150M
 while(( $int<=10 ))
 do
     core_name=`expr $int \+ 0`
-    rate=`expr $int \* 75`
-    taskset -c $core_name nohup ./waf --run "scratch/laa --cellConfigA=Wifi --numA=$int --numB=$int --d2=10 --lbtTxop=5 --udpRate=${rate}000000bps --duration=100 --logPhyArrivals=true" 2>&1  > ./10m_100s_nvn_pure_wifi/${int}v${int} &
+    taskset -c $core_name nohup ./waf --run "scratch/laa --cellConfigA=Wifi --numA=$int --numB=$int --d2=10 --lbtTxop=5 --udpRate=150000000bps --duration=100" 2>&1  > ./new_10m_100s_nvn_pure_wifi_150M/${int}v${int} &
     sleep 1
     let "int++"
 done
