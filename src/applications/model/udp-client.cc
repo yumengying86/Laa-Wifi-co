@@ -28,7 +28,6 @@
 #include "ns3/socket-factory.h"
 #include "ns3/packet.h"
 #include "ns3/uinteger.h"
-#include "ns3/double.h"
 #include "udp-client.h"
 #include "seq-ts-header.h"
 #include <cstdlib>
@@ -52,11 +51,6 @@ UdpClient::GetTypeId (void)
                    UintegerValue (100),
                    MakeUintegerAccessor (&UdpClient::m_count),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("RandomRatio",
-                   "random ratio",
-                   DoubleValue (0.5),
-                   MakeDoubleAccessor (&UdpClient::m_randomRatio),
-                   MakeDoubleChecker<float> (0.0, 1.0))
     .AddAttribute ("Interval",
                    "The time to wait between packets", TimeValue (Seconds (1.0)),
                    MakeTimeAccessor (&UdpClient::m_interval),
@@ -74,7 +68,7 @@ UdpClient::GetTypeId (void)
                    "Size of packets generated. The minimum packet size is 12 bytes which is the size of the header carrying the sequence number and the time stamp.",
                    UintegerValue (1024),
                    MakeUintegerAccessor (&UdpClient::m_size),
-                   MakeUintegerChecker<uint32_t> (12,1500))
+                   MakeUintegerChecker<uint32_t> (12,65507))
   ;
   return tid;
 }
@@ -85,7 +79,6 @@ UdpClient::UdpClient ()
   m_sent = 0;
   m_socket = 0;
   m_sendEvent = EventId ();
-  m_random = CreateObject<UniformRandomVariable> ();
 }
 
 UdpClient::~UdpClient ()
@@ -211,7 +204,7 @@ UdpClient::Send (void)
 
   if (m_sent < m_count)
     {
-      m_sendEvent = Simulator::Schedule (m_interval * (1.0 - m_randomRatio + 2.0 * m_randomRatio * m_random->GetValue()), &UdpClient::Send, this);
+      m_sendEvent = Simulator::Schedule (m_interval, &UdpClient::Send, this);
     }
 }
 

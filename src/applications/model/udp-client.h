@@ -26,7 +26,6 @@
 #include "ns3/application.h"
 #include "ns3/event-id.h"
 #include "ns3/ptr.h"
-#include "ns3/random-variable-stream.h"
 #include "ns3/ipv4-address.h"
 
 namespace ns3 {
@@ -88,8 +87,7 @@ private:
   Address m_peerAddress; //!< Remote peer address
   uint16_t m_peerPort; //!< Remote peer port
   EventId m_sendEvent; //!< Event to send the next packet
-  float m_randomRatio;
-  Ptr<UniformRandomVariable> m_random;
+
 };
 
 } // namespace ns3

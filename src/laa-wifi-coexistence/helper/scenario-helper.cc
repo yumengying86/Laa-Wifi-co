@@ -605,8 +605,17 @@ std::vector<VoiceRxLog> g_voiceRxLog;
 std::vector<DataTx> g_dataTxLogs;
 std::vector<CtrlSignalLog> g_ctrlSignalLog;
 
+std::vector<uint32_t> bytesReceived (40);
+
 double g_txopDurationCounter = 0;
 double g_arrivalsDurationCounter = 0;
+
+void
+SocketRx (std::string context, Ptr<const Packet> p, const Address &addr)
+{
+  uint32_t nodeId = ContextToNodeId (context);
+  bytesReceived[nodeId] += p->GetSize ();
+}
 
 void
 DeassociationLogging (std::string context, Mac48Address address)
@@ -2029,28 +2038,28 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   GlobalValue::GetValueByName ("wifiQueueMaxDelay", uValue);
   Config::SetDefault ("ns3::WifiMacQueue::MaxDelay", TimeValue (MilliSeconds (uValue.Get ())));
   NetDeviceContainer apDevices;
-  SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
-  spectrumPhy.SetChannel (channel);
-  // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only.
-  // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
-  spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_bsTxGain));
-  spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_bsRxGain));
-  spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
-  spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
-  spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
-  spectrumPhy.Set ("Antennas", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
-  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
-  spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
-  WifiMacHelper mac;
 
 
   for (uint32_t i = 0; i < bsNodes.GetN (); i++)
     {
+      SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
+      spectrumPhy.SetChannel (channel);
+      // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only.
+      // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
+      spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_bsTxGain));
+      spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_bsRxGain));
+      spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
+      spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
+      spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
+      spectrumPhy.Set ("Antennas", UintegerValue (2));
+      spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+      spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+      spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+      WifiHelper wifi;
+      wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+      wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
+      WifiMacHelper mac;
       char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
@@ -2069,20 +2078,20 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   // Set guard interval
   Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
 
-  BooleanValue booleanValue;
-  bool found;
-  found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
-  if (found && booleanValue.Get () == true)
-    {
-      spectrumPhy.EnablePcap ("laa-wifi-ap", apDevices);
-    }
-  found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
-  if (found && booleanValue.Get () == true)
-    {
-      AsciiTraceHelper ascii;
-      std::string prefix = "laa-wifi-ap";
-      spectrumPhy.EnableAscii (prefix, apDevices);
-    }
+  // BooleanValue booleanValue;
+  // bool found;
+  // found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
+  // if (found && booleanValue.Get () == true)
+  //   {
+  //     spectrumPhy.EnablePcap ("laa-wifi-ap", apDevices);
+  //   }
+  // found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
+  // if (found && booleanValue.Get () == true)
+  //   {
+  //     AsciiTraceHelper ascii;
+  //     std::string prefix = "laa-wifi-ap";
+  //     spectrumPhy.EnableAscii (prefix, apDevices);
+  //   }
   return apDevices;
 }
 
@@ -2099,28 +2108,28 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   Config::SetDefault ("ns3::WifiMacQueue::MaxDelay", TimeValue (MilliSeconds (uValue.Get ())));
 
   NetDeviceContainer staDevices;
-  SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
-  spectrumPhy.SetChannel (channel);
-  // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only
-  // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
-  spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_ueTxGain));
-  spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_ueRxGain));
-  spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
-  spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
-  spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
-  spectrumPhy.Set ("Antennas", UintegerValue (2));
-  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
-  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
-  spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
-  WifiMacHelper mac;
 
 
   for (uint32_t i = 0; i < ueNodes.GetN (); i++)
     {
+      SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
+      spectrumPhy.SetChannel (channel);
+      // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only
+      // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
+      spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_ueTxGain));
+      spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_ueRxGain));
+      spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
+      spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
+      spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
+      spectrumPhy.Set ("Antennas", UintegerValue (2));
+      spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+      spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+      spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+      WifiHelper wifi;
+      wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+      wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
+      WifiMacHelper mac;
       char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
@@ -2139,21 +2148,53 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   // Set guard interval
   Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
 
-  BooleanValue booleanValue;
-  bool found;
-  found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
-  if (found && booleanValue.Get () == true)
-    {
-      spectrumPhy.EnablePcap ("laa-wifi-sta", staDevices);
-    }
-  found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
-  if (found && booleanValue.Get () == true)
-    {
-      AsciiTraceHelper ascii;
-      std::string prefix = "laa-wifi-sta";
-      spectrumPhy.EnableAscii (prefix, staDevices);
-    }
+  // BooleanValue booleanValue;
+  // bool found;
+  // found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
+  // if (found && booleanValue.Get () == true)
+  //   {
+  //     spectrumPhy.EnablePcap ("laa-wifi-sta", staDevices);
+  //   }
+  // found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
+  // if (found && booleanValue.Get () == true)
+  //   {
+  //     AsciiTraceHelper ascii;
+  //     std::string prefix = "laa-wifi-sta";
+  //     spectrumPhy.EnableAscii (prefix, staDevices);
+  //   }
   return staDevices;
+}
+
+void
+ConfigurePacketSocket(NetDeviceContainer bsDevices, NetDeviceContainer ueDevices, NodeContainer bsNodes, NodeContainer ueNodes,
+        Time clientStartTime, Time clientStopTime, Time serverStartTime, Time serverStopTime, Time interval) {
+  UintegerValue packetSizeValue;
+  GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
+  Ptr<UniformRandomVariable> startTime = CreateObject<UniformRandomVariable> ();
+  uint32_t trialNumber = 1;
+  startTime->SetAttribute ("Stream", IntegerValue (trialNumber));
+  startTime->SetAttribute ("Max", DoubleValue (1.0));
+  for(uint32_t i = 0; i < bsNodes.GetN(); i++) {
+    PacketSocketAddress socketAddr;
+    socketAddr.SetSingleDevice (bsDevices.Get (i)->GetIfIndex ());
+    socketAddr.SetPhysicalAddress (ueDevices.Get (i)->GetAddress ());
+    socketAddr.SetProtocol (1);
+
+    Ptr<PacketSocketClient> client = CreateObject<PacketSocketClient> ();
+    client->SetRemote (socketAddr);
+    bsNodes.Get (i)->AddApplication (client);
+    client->SetAttribute ("PacketSize", packetSizeValue);
+    client->SetAttribute ("MaxPackets", UintegerValue (0));
+    client->SetAttribute ("Interval", TimeValue (interval));
+    double start = startTime->GetValue ();
+    client->SetStartTime (clientStartTime + Seconds (start));
+    client->SetStopTime (clientStopTime);
+    Ptr<PacketSocketServer> server = CreateObject<PacketSocketServer> ();
+    server->SetLocal (socketAddr);
+    ueNodes.Get (i)->AddApplication (server);
+    server->SetStartTime (serverStartTime);
+    server->SetStopTime (serverStopTime); 
+  }
 }
 
 ApplicationContainer
@@ -2605,19 +2646,24 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     }
 
 
-
   // LTE requires some Internet stack configuration prior to device installation
   // Wifi configures it after device installation
   InternetStackHelper internetStackHelper;
+  PacketSocketHelper packetSocket;
   // Install an internet stack to all the nodes with IP
   if(cellConfigA != WIFI) {
     internetStackHelper.Install (clientNodesA);
+    internetStackHelper.Install (ueNodesA);
+  } else {
+    packetSocket.Install (ueNodesA);
   }
   if(cellConfigB != WIFI) {
     internetStackHelper.Install (clientNodesB);
+    internetStackHelper.Install (ueNodesB);
+  } else {
+    packetSocket.Install (ueNodesB);
   }
-  internetStackHelper.Install (ueNodesA);
-  internetStackHelper.Install (ueNodesB);
+  
 
 
   //
@@ -2630,19 +2676,10 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   Ipv4InterfaceContainer interfacesA;
   if (cellConfigA == WIFI)
     {
-      internetStackHelper.Install (bsNodesA);
+      packetSocket.Install (bsNodesA);
       Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
       bsDevicesA.Add (ConfigureWifiAp (bsNodesA, phyParams, spectrumChannel, 'A'));
       ueDevicesA.Add (ConfigureWifiSta (ueNodesA, phyParams, spectrumChannel, 'A'));
-      for(uint32_t i = 0; i < bsNodesA.GetN(); i++) {
-        Ipv4AddressHelper ipv4h;
-        std::string addr = std::to_string(i + 21) + ".0.0.0";
-        Ipv4Address networkAddr(addr.c_str());
-        ipv4h.SetBase (networkAddr, "255.255.0.0");
-        // The IP address for the backhaul traffic source will be 11.0.0.1
-        ipv4h.Assign (bsDevicesA.Get(i));
-        interfacesA.Add(ipv4h.Assign (ueDevicesA.Get(i)));
-      }
     }
   else if (cellConfigA == LTE)
     {
@@ -2721,20 +2758,10 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   Ipv4InterfaceContainer interfacesB;
   if (cellConfigB == WIFI)
     {
-      internetStackHelper.Install (bsNodesB);
+      packetSocket.Install (bsNodesB);
       Ptr<SpectrumChannel> spectrumChannel = lteHelper->GetDownlinkSpectrumChannel ();
       bsDevicesB.Add (ConfigureWifiAp (bsNodesB, phyParams, spectrumChannel, 'K'));
       ueDevicesB.Add (ConfigureWifiSta (ueNodesB, phyParams, spectrumChannel, 'K'));
-      for(uint32_t i = 0; i < bsNodesB.GetN(); i++) 
-      {
-        Ipv4AddressHelper ipv4h;
-        std::string addr = std::to_string(i + 41) + ".0.0.0";
-        Ipv4Address networkAddr(addr.c_str());
-        ipv4h.SetBase (networkAddr, "255.255.0.0");
-        // The IP address for the backhaul traffic source will be 11.0.0.1
-        ipv4h.Assign (bsDevicesB.Get(i));
-        interfacesB.Add(ipv4h.Assign (ueDevicesB.Get(i)));
-      }
     }
   else if (cellConfigB == LTE)
     {
@@ -2855,7 +2882,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
       bool shutB=isShut.Get();
       std::cout<<"shutA?  "<<shutA<<std::endl;
       std::cout<<"shutB?  "<<shutB<<std::endl;
-      if (transport == UDP)
+      if (transport == UDP) // ymy: no udp
         {
           if(cellConfigA == LAA) {
             ApplicationContainer serverApps;
@@ -2863,11 +2890,12 @@ ConfigureAndRunScenario (Config_e cellConfigA,
             if(!shutA) ConfigureUdpLAAClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
             else ConfigureUdpLAAClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
           } else {
-            ApplicationContainer serverApps;
-            serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
-            if(!shutA) ConfigureUdpWifiClients (bsNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
-            else ConfigureUdpWifiClients (bsNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
-          
+            // ApplicationContainer serverApps;
+            // serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
+            // if(!shutA) ConfigureUdpWifiClients (bsNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
+            // else ConfigureUdpWifiClients (bsNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+            if(!shutA) ConfigurePacketSocket(bsDevicesA, ueDevicesA, bsNodesA, ueNodesA, clientStartTime, clientStopTime, serverStartTime, serverStopTime, udpInterval);
+            else ConfigurePacketSocket(bsDevicesA, ueDevicesA, bsNodesA, ueNodesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), serverStartTime, serverStopTime, udpInterval);
           }
          
           if(cellConfigB == LAA) {
@@ -2876,10 +2904,12 @@ ConfigureAndRunScenario (Config_e cellConfigA,
             if(!shutB) ConfigureUdpLAAClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
             else ConfigureUdpLAAClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
           } else {
-            ApplicationContainer serverApps;
-            serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
-            if(!shutB) ConfigureUdpWifiClients (bsNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
-            else ConfigureUdpWifiClients (bsNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+            // ApplicationContainer serverApps;
+            // serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
+            // if(!shutB) ConfigureUdpWifiClients (bsNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
+            // else ConfigureUdpWifiClients (bsNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+            if(!shutB) ConfigurePacketSocket(bsDevicesB, ueDevicesB, bsNodesB, ueNodesB, clientStartTime, clientStopTime, serverStartTime, serverStopTime, udpInterval);
+            else ConfigurePacketSocket(bsDevicesB, ueDevicesB, bsNodesB, ueNodesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), serverStartTime, serverStopTime, udpInterval);
           }
         }
       else if (transport == FTP)
@@ -3017,36 +3047,37 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // https://groups.google.com/d/msg/ns-3-users/rl77tJCcw8c/egMn__QyVNQJ
 
 
-  FlowMonitorHelper flowmonHelperA;
-  NodeContainer endpointNodesA;
-  if(cellConfigA != WIFI) {
-    endpointNodesA.Add (clientNodesA);
-  } else {
-    endpointNodesA.Add (bsNodesA);
-  }
-  endpointNodesA.Add (ueNodesA);
-  FlowMonitorHelper flowmonHelperB;
-  NodeContainer endpointNodesB;
-  if(cellConfigB != WIFI) {
-    endpointNodesB.Add (clientNodesB);
-  } else {
-    endpointNodesB.Add (bsNodesB);
-  }
-  endpointNodesB.Add (ueNodesB);
+  // FlowMonitorHelper flowmonHelperA;
+  // NodeContainer endpointNodesA;
+  // if(cellConfigA != WIFI) {
+  //   endpointNodesA.Add (clientNodesA);
+  // } else {
+  //   endpointNodesA.Add (bsNodesA);
+  // }
+  // endpointNodesA.Add (ueNodesA);
+  // FlowMonitorHelper flowmonHelperB;
+  // NodeContainer endpointNodesB;
+  // if(cellConfigB != WIFI) {
+  //   endpointNodesB.Add (clientNodesB);
+  // } else {
+  //   endpointNodesB.Add (bsNodesB);
+  // }
+  // endpointNodesB.Add (ueNodesB);
 
 
-  Ptr<FlowMonitor> monitorA = flowmonHelperA.Install (endpointNodesA);
-  monitorA->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
-  monitorA->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
-  monitorA->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
+  // Ptr<FlowMonitor> monitorA = flowmonHelperA.Install (endpointNodesA);
+  // monitorA->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
+  // monitorA->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
+  // monitorA->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
   
-  Ptr<FlowMonitor> monitorB = flowmonHelperB.Install (endpointNodesB);
-  monitorB->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
-  monitorB->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
-  monitorB->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
+  // Ptr<FlowMonitor> monitorB = flowmonHelperB.Install (endpointNodesB);
+  // monitorB->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
+  // monitorB->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
+  // monitorB->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
 
   // these slow down simulations, only enable them if you need them
   //lteHelper->EnableTraces();
+  Config::Connect ("/NodeList/*/ApplicationList/*/$ns3::PacketSocketServer/Rx", MakeCallback (&SocketRx));
 
   Ptr<RadioEnvironmentMapHelper> remHelper;
   if (generateRem)
@@ -3144,33 +3175,39 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // Running the simulation
   //
   Simulator::Run ();
+    uint32_t sum = bsNodesA.GetN() * 2 + bsNodesB.GetN() * 2;
+    for (uint32_t i = sum / 2; i < sum; i++)
+    {
+      double throughput = static_cast<double> (bytesReceived[i]) * 8 / 1000 / 1000 / durationTime.GetSeconds ();
+      std::cout << "Throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
+    }
 
   //
   // Post-processing phase
   //
 
-  std::cout<<"Total txop duration: "<<g_txopDurationCounter<<" seconds." << std::endl;
-  std::cout<<"Total phy arrivals duration: "<<g_arrivalsDurationCounter<<" seconds." << std::endl;
+  // std::cout<<"Total txop duration: "<<g_txopDurationCounter<<" seconds." << std::endl;
+  // std::cout<<"Total phy arrivals duration: "<<g_arrivalsDurationCounter<<" seconds." << std::endl;
 
-  std::cout << "--------monitorA----------" << std::endl;
-  PrintFlowMonitorStats (monitorA, flowmonHelperA, durationTime.GetSeconds ());
-  std::cout << "--------monitorB----------" << std::endl;
-  PrintFlowMonitorStats (monitorB, flowmonHelperB, durationTime.GetSeconds ());
+  // std::cout << "--------monitorA----------" << std::endl;
+  // PrintFlowMonitorStats (monitorA, flowmonHelperA, durationTime.GetSeconds ());
+  // std::cout << "--------monitorB----------" << std::endl;
+  // PrintFlowMonitorStats (monitorB, flowmonHelperB, durationTime.GetSeconds ());
 
-  if (transport == TCP)
-    {
-      SaveTcpFlowMonitorStats (outFileName + "_operatorA", simulationParams, monitorA, flowmonHelperA, durationTime.GetSeconds ());
-      SaveTcpFlowMonitorStats (outFileName + "_operatorB", simulationParams, monitorB, flowmonHelperB, durationTime.GetSeconds ());
-    }
-  else if (transport == UDP || transport == FTP)
-    {
-      SaveUdpFlowMonitorStats (outFileName + "_operatorA", simulationParams, monitorA, flowmonHelperA, durationTime.GetSeconds ());
-      SaveUdpFlowMonitorStats (outFileName + "_operatorB", simulationParams, monitorB, flowmonHelperB, durationTime.GetSeconds ());
-    }
-  else
-    {
-      NS_FATAL_ERROR ("transport parameter invalid: " << transport);
-    }
+  // if (transport == TCP)
+  //   {
+  //     SaveTcpFlowMonitorStats (outFileName + "_operatorA", simulationParams, monitorA, flowmonHelperA, durationTime.GetSeconds ());
+  //     SaveTcpFlowMonitorStats (outFileName + "_operatorB", simulationParams, monitorB, flowmonHelperB, durationTime.GetSeconds ());
+  //   }
+  // else if (transport == UDP || transport == FTP)
+  //   {
+  //     SaveUdpFlowMonitorStats (outFileName + "_operatorA", simulationParams, monitorA, flowmonHelperA, durationTime.GetSeconds ());
+  //     SaveUdpFlowMonitorStats (outFileName + "_operatorB", simulationParams, monitorB, flowmonHelperB, durationTime.GetSeconds ());
+  //   }
+  // else
+  //   {
+  //     NS_FATAL_ERROR ("transport parameter invalid: " << transport);
+  //   }
 
   NodeContainer bsNodesForLogs;
   NodeContainer ueNodesForLogs;
@@ -3233,12 +3270,12 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     {
       SaveRetriesStats (outFileName + "_retries_log", g_wifiRetries);
     }
-  GlobalValue::GetValueByNameFailSafe ("voiceEnabled", booleanValue);
-  if (booleanValue.Get () == true)
-    {
-      SaveVoiceSummaryStats (outFileName + "_operatorB_voice_summary_log", endpointNodesB);
-      SaveVoiceStats (outFileName + "_operatorB_voice_log", endpointNodesB, g_voiceRxLog);
-    }
+  // GlobalValue::GetValueByNameFailSafe ("voiceEnabled", booleanValue);
+  // if (booleanValue.Get () == true)
+  //   {
+  //     SaveVoiceSummaryStats (outFileName + "_operatorB_voice_summary_log", endpointNodesB);
+  //     SaveVoiceStats (outFileName + "_operatorB_voice_log", endpointNodesB, g_voiceRxLog);
+  //   }
   GlobalValue::GetValueByName ("logCtrlSignals", booleanValue);
   if (booleanValue.Get () == true)
     {
