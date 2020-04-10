@@ -1925,7 +1925,7 @@ ConfigureLaa (uint32_t ip1num, Ptr<LteHelper> lteHelper, Ptr<PointToPointEpcHelp
     // make LTE and network reachable from the client node
     Ipv4StaticRoutingHelper ipv4RoutingHelper;
     Ptr<Ipv4StaticRouting> clientNodeStaticRouting = ipv4RoutingHelper.GetStaticRouting (clientNode->GetObject<Ipv4> ());
-    clientNodeStaticRouting->AddNetworkRouteTo (Ipv4Address ("20.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
+    clientNodeStaticRouting->AddNetworkRouteTo (Ipv4Address ("7.0.0.0"), Ipv4Mask ("255.0.0.0"), 1);
   }
 
   // LTE configuration parametes
@@ -2038,28 +2038,28 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   GlobalValue::GetValueByName ("wifiQueueMaxDelay", uValue);
   Config::SetDefault ("ns3::WifiMacQueue::MaxDelay", TimeValue (MilliSeconds (uValue.Get ())));
   NetDeviceContainer apDevices;
+  SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
+  spectrumPhy.SetChannel (channel);
+  // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only.
+  // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
+  spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_bsTxGain));
+  spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_bsRxGain));
+  spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
+  spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
+  spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
+  spectrumPhy.Set ("Antennas", UintegerValue (2));
+  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+  spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+  WifiHelper wifi;
+  wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
+  WifiMacHelper mac;
 
 
   for (uint32_t i = 0; i < bsNodes.GetN (); i++)
     {
-      SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
-      spectrumPhy.SetChannel (channel);
-      // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only.
-      // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
-      spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_bsTxGain));
-      spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_bsRxGain));
-      spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
-      spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
-      spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
-      spectrumPhy.Set ("Antennas", UintegerValue (2));
-      spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
-      spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
-      spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-      WifiHelper wifi;
-      wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-      wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
-      WifiMacHelper mac;
       char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
@@ -2078,20 +2078,20 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   // Set guard interval
   Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
 
-  // BooleanValue booleanValue;
-  // bool found;
-  // found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
-  // if (found && booleanValue.Get () == true)
-  //   {
-  //     spectrumPhy.EnablePcap ("laa-wifi-ap", apDevices);
-  //   }
-  // found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
-  // if (found && booleanValue.Get () == true)
-  //   {
-  //     AsciiTraceHelper ascii;
-  //     std::string prefix = "laa-wifi-ap";
-  //     spectrumPhy.EnableAscii (prefix, apDevices);
-  //   }
+  BooleanValue booleanValue;
+  bool found;
+  found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      spectrumPhy.EnablePcap ("laa-wifi-ap", apDevices);
+    }
+  found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      AsciiTraceHelper ascii;
+      std::string prefix = "laa-wifi-ap";
+      spectrumPhy.EnableAscii (prefix, apDevices);
+    }
   return apDevices;
 }
 
@@ -2108,28 +2108,28 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   Config::SetDefault ("ns3::WifiMacQueue::MaxDelay", TimeValue (MilliSeconds (uValue.Get ())));
 
   NetDeviceContainer staDevices;
+  SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
+  spectrumPhy.SetChannel (channel);
+  // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only
+  // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
+  spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_ueTxGain));
+  spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_ueRxGain));
+  spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
+  spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
+  spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
+  spectrumPhy.Set ("Antennas", UintegerValue (2));
+  spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
+  spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
+  spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+  WifiHelper wifi;
+  wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
+  WifiMacHelper mac;
 
 
   for (uint32_t i = 0; i < ueNodes.GetN (); i++)
     {
-      SpectrumWifiPhyHelper spectrumPhy = SpectrumWifiPhyHelper::Default ();
-      spectrumPhy.SetChannel (channel);
-      // Note that LTE eNB rxGain is implemented through AntennaModel at SpectrumChannel, contrary to Wi-Fi which is handled by SpectrumWifiPhy only
-      // In addition, LAA has an AdHocWifiMac station to perform LBT (set in ConfigureEnbDevicesForLbt), that should have BS gain properties (namely Rx).
-      spectrumPhy.Set ("TxGain", DoubleValue (phyParams.m_ueTxGain));
-      spectrumPhy.Set ("RxGain", DoubleValue (phyParams.m_ueRxGain));
-      spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
-      spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
-      spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
-      spectrumPhy.Set ("Antennas", UintegerValue (2));
-      spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
-      spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
-      spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-      WifiHelper wifi;
-      wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-      wifi.SetStandard (WIFI_PHY_STANDARD_80211n_5GHZ);
-      WifiMacHelper mac;
       char ch = ssidLastCh + i; 
       std::string ss = "ns380211n-";
       ss.push_back(ch);
@@ -2148,20 +2148,20 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   // Set guard interval
   Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HtConfiguration/ShortGuardIntervalSupported", BooleanValue (true));
 
-  // BooleanValue booleanValue;
-  // bool found;
-  // found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
-  // if (found && booleanValue.Get () == true)
-  //   {
-  //     spectrumPhy.EnablePcap ("laa-wifi-sta", staDevices);
-  //   }
-  // found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
-  // if (found && booleanValue.Get () == true)
-  //   {
-  //     AsciiTraceHelper ascii;
-  //     std::string prefix = "laa-wifi-sta";
-  //     spectrumPhy.EnableAscii (prefix, staDevices);
-  //   }
+  BooleanValue booleanValue;
+  bool found;
+  found = GlobalValue::GetValueByNameFailSafe ("pcapEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      spectrumPhy.EnablePcap ("laa-wifi-sta", staDevices);
+    }
+  found = GlobalValue::GetValueByNameFailSafe ("asciiEnabled", booleanValue);
+  if (found && booleanValue.Get () == true)
+    {
+      AsciiTraceHelper ascii;
+      std::string prefix = "laa-wifi-sta";
+      spectrumPhy.EnableAscii (prefix, staDevices);
+    }
   return staDevices;
 }
 
@@ -2207,32 +2207,6 @@ ConfigureUdpServers (NodeContainer servers, Time startTime, Time stopTime)
   serverApps.Start (startTime);
   serverApps.Stop (stopTime);
   return serverApps;
-}
-
-void
-ConfigureUdpWifiClients (NodeContainer clients, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
-{
-  // Randomly distribute the start times
-  Ptr<UniformRandomVariable> randomVariable = CreateObject<UniformRandomVariable> ();
-  randomVariable->SetAttribute ("Max", DoubleValue (1.0));
-  uint32_t remotePort = UDP_SERVER_PORT;
-  UintegerValue packetSizeValue;
-  GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
-
-  for (uint32_t i = 0; i < servers.GetN (); i++)
-    {
-      randomVariable->SetStream (streamIndex++);
-
-      UdpClientHelper clientHelper (servers.GetAddress (i), remotePort);
-      clientHelper.SetAttribute ("MaxPackets", UintegerValue (4294967295u));
-      clientHelper.SetAttribute ("Interval", TimeValue (interval));
-      clientHelper.SetAttribute ("PacketSize", packetSizeValue);
-      
-      ApplicationContainer clientApp = clientHelper.Install(clients.Get (i));
-      clientApp.StartWithJitter (startTime, randomVariable);
-      clientApp.Stop (stopTime);
-    }
-
 }
 
 void
@@ -3046,34 +3020,26 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // this email might also be relevant
   // https://groups.google.com/d/msg/ns-3-users/rl77tJCcw8c/egMn__QyVNQJ
 
+  FlowMonitorHelper flowmonHelperA, flowmonHelperB;
+  NodeContainer endpointNodesA, endpointNodesB;
+  Ptr<FlowMonitor> monitorA, monitorB; 
+  if(cellConfigA != WIFI) {
+    endpointNodesA.Add (clientNodesA);
+    endpointNodesA.Add (ueNodesA);
+    monitorA = flowmonHelperA.Install (endpointNodesA);
+    monitorA->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
+    monitorA->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
+    monitorA->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
+  }
+  if(cellConfigB != WIFI) {
+    endpointNodesB.Add (clientNodesB);
+    endpointNodesB.Add (ueNodesB);
+    monitorB = flowmonHelperB.Install (endpointNodesB);
+    monitorB->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
+    monitorB->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
+    monitorB->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
+  }
 
-  // FlowMonitorHelper flowmonHelperA;
-  // NodeContainer endpointNodesA;
-  // if(cellConfigA != WIFI) {
-  //   endpointNodesA.Add (clientNodesA);
-  // } else {
-  //   endpointNodesA.Add (bsNodesA);
-  // }
-  // endpointNodesA.Add (ueNodesA);
-  // FlowMonitorHelper flowmonHelperB;
-  // NodeContainer endpointNodesB;
-  // if(cellConfigB != WIFI) {
-  //   endpointNodesB.Add (clientNodesB);
-  // } else {
-  //   endpointNodesB.Add (bsNodesB);
-  // }
-  // endpointNodesB.Add (ueNodesB);
-
-
-  // Ptr<FlowMonitor> monitorA = flowmonHelperA.Install (endpointNodesA);
-  // monitorA->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
-  // monitorA->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
-  // monitorA->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
-  
-  // Ptr<FlowMonitor> monitorB = flowmonHelperB.Install (endpointNodesB);
-  // monitorB->SetAttribute ("DelayBinWidth", DoubleValue (0.001));
-  // monitorB->SetAttribute ("JitterBinWidth", DoubleValue (0.001));
-  // monitorB->SetAttribute ("PacketSizeBinWidth", DoubleValue (20));
 
   // these slow down simulations, only enable them if you need them
   //lteHelper->EnableTraces();
@@ -3188,12 +3154,16 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
   // std::cout<<"Total txop duration: "<<g_txopDurationCounter<<" seconds." << std::endl;
   // std::cout<<"Total phy arrivals duration: "<<g_arrivalsDurationCounter<<" seconds." << std::endl;
-
-  // std::cout << "--------monitorA----------" << std::endl;
-  // PrintFlowMonitorStats (monitorA, flowmonHelperA, durationTime.GetSeconds ());
-  // std::cout << "--------monitorB----------" << std::endl;
-  // PrintFlowMonitorStats (monitorB, flowmonHelperB, durationTime.GetSeconds ());
-
+  if(cellConfigA != WIFI) 
+  {
+    std::cout << "--------monitorA----------" << std::endl;
+    PrintFlowMonitorStats (monitorA, flowmonHelperA, durationTime.GetSeconds ());
+  }
+  if(cellConfigB != WIFI) 
+  {
+    std::cout << "--------monitorB----------" << std::endl;
+    PrintFlowMonitorStats (monitorB, flowmonHelperB, durationTime.GetSeconds ());
+  }
   // if (transport == TCP)
   //   {
   //     SaveTcpFlowMonitorStats (outFileName + "_operatorA", simulationParams, monitorA, flowmonHelperA, durationTime.GetSeconds ());
