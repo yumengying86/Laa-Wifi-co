@@ -240,7 +240,12 @@ LteUeMac::GetTypeId (void)
                      "trace fired upon RA response timeout",
                      MakeTraceSourceAccessor (&LteUeMac::m_raResponseTimeoutTrace),
                      "ns3::LteUeMac::RaResponseTimeoutTracedCallback")
-
+    .AddTraceSource ("MacRx",
+                     "Trace source indicating a packet "
+                     "has been completely received from the channel medium "
+                     "by the device",
+                     MakeTraceSourceAccessor (&LteUeMac::m_macRxTrace),
+                     "ns3::LteUeMac::MacRxTracedCallback")
     ;
   return tid;
 }
@@ -639,8 +644,9 @@ LteUeMac::DoReceivePhyPdu (Ptr<Packet> p)
         {
           LteMacSapUser::ReceivePduParameters rxPduParams;
           rxPduParams.p = p;
-          rxPduParams.rnti = m_rnti;
+	  rxPduParams.rnti = m_rnti;
           rxPduParams.lcid = tag.GetLcid ();
+          m_macRxTrace (m_rnti, p);
           it->second.macSapUser->ReceivePdu (rxPduParams);
         }
       else

@@ -74,6 +74,9 @@ public:
   typedef void (* RaResponseTimeoutTracedCallback)
     (uint64_t imsi, bool contention, uint8_t preambleTxCounter, uint8_t maxPreambleTxLimit);
 
+  
+  typedef void (*MacRxTracedCallback) (uint8_t rnti, Ptr<Packet> p);
+
   /**
   * \brief Get the LTE MAC SAP provider
   * \return a pointer to the LTE MAC SAP provider
@@ -294,6 +297,7 @@ private:
    * and the max limit of preamble transmission.
    */
   TracedCallback<uint64_t, bool, uint8_t, uint8_t> m_raResponseTimeoutTrace;
+  TracedCallback<uint8_t, Ptr<Packet>> m_macRxTrace;
 };
 
 } // namespace ns3

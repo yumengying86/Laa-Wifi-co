@@ -609,6 +609,9 @@ std::vector<CtrlSignalLog> g_ctrlSignalLog;
 std::vector<uint32_t> bytesReceived (MAX_PAIR_NUM);
 std::vector<Time> timeFirstReceived (MAX_PAIR_NUM);
 std::vector<Time> timeLastReceived (MAX_PAIR_NUM);
+std::vector<uint32_t> lteBytesReceived (MAX_PAIR_NUM);
+std::vector<Time> lteTimeFirstReceived (MAX_PAIR_NUM);
+std::vector<Time> lteTimeLastReceived (MAX_PAIR_NUM);
 
 double g_txopDurationCounter = 0;
 double g_arrivalsDurationCounter = 0;
@@ -627,6 +630,21 @@ SocketRx (std::string context, Ptr<const Packet> p, const Address &addr)
     timeLastReceived[nodeId] = time;
   }
   bytesReceived[nodeId] += p->GetSize ();
+}
+
+void
+LteMacRx (std::string context, uint8_t rnti, Ptr<Packet> p) {
+  Time time = Simulator::Now ();
+  uint32_t nodeId = ContextToNodeId (context);
+  if(lteTimeFirstReceived[nodeId].GetSeconds() == 0) 
+  {
+    lteTimeFirstReceived[nodeId] = time;
+  }
+  if(lteTimeLastReceived[nodeId].GetSeconds() < time)
+  {
+    lteTimeLastReceived[nodeId] = time;
+  }
+  lteBytesReceived[nodeId] += p->GetSize ();
 }
 
 void
@@ -3056,6 +3074,7 @@ ConfigureAndRunScenario (Config_e cellConfigA,
   // these slow down simulations, only enable them if you need them
   //lteHelper->EnableTraces();
   Config::Connect ("/NodeList/*/ApplicationList/*/$ns3::PacketSocketServer/Rx", MakeCallback (&SocketRx));
+  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::LteUeNetDevice/ComponentCarrierMapUe/*/LteUeMac/MacRx", MakeCallback (&LteMacRx));
 
   Ptr<RadioEnvironmentMapHelper> remHelper;
   if (generateRem)
@@ -3156,10 +3175,24 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     uint32_t sum = bsNodesA.GetN() * 2 + bsNodesB.GetN() * 2;
     for (uint32_t i = sum / 2; i < sum; i++)
     {
-      std::cout << "Time first: " << timeFirstReceived[i].GetSeconds () << std::endl; 
-      std::cout << "Time last: "<< timeLastReceived[i].GetSeconds () << std::endl;
-      double throughput = static_cast<double> (bytesReceived[i]) * 8 / 1000 / 1000 / (timeLastReceived[i] - timeFirstReceived[i]).GetSeconds ();
-      std::cout << "Throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
+      Time first = timeFirstReceived[i];
+      Time last = timeLastReceived[i];
+      if(first == last) continue;
+      std::cout << "wifi time first: " << first.GetSeconds () << std::endl; 
+      std::cout << "wifi time last: "<< last.GetSeconds () << std::endl;
+      double throughput = static_cast<double> (bytesReceived[i]) * 8 / 1000 / 1000 / (last - first).GetSeconds ();
+      std::cout << "wifi throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
+    }
+
+    for (uint32_t i = sum / 2; i < sum; i++)
+    {
+      Time first = lteTimeFirstReceived[i];
+      Time last = lteTimeLastReceived[i];
+      if(first == last) continue;
+      std::cout << "lte time first: " << first.GetSeconds () << std::endl; 
+      std::cout << "lte time last: "<< last.GetSeconds () << std::endl;
+      double throughput = static_cast<double> (lteBytesReceived[i]) * 8 / 1000 / 1000 / (last - first).GetSeconds ();
+      std::cout << "lte throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
     }
 
   //
