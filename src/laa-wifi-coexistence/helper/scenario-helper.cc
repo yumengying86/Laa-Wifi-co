@@ -605,7 +605,10 @@ std::vector<VoiceRxLog> g_voiceRxLog;
 std::vector<DataTx> g_dataTxLogs;
 std::vector<CtrlSignalLog> g_ctrlSignalLog;
 
-std::vector<uint32_t> bytesReceived (40);
+#define MAX_PAIR_NUM 40
+std::vector<uint32_t> bytesReceived (MAX_PAIR_NUM);
+std::vector<Time> timeFirstReceived (MAX_PAIR_NUM);
+std::vector<Time> timeLastReceived (MAX_PAIR_NUM);
 
 double g_txopDurationCounter = 0;
 double g_arrivalsDurationCounter = 0;
@@ -613,7 +616,16 @@ double g_arrivalsDurationCounter = 0;
 void
 SocketRx (std::string context, Ptr<const Packet> p, const Address &addr)
 {
+  Time time = Simulator::Now ();
   uint32_t nodeId = ContextToNodeId (context);
+  if(timeFirstReceived[nodeId].GetSeconds() == 0) 
+  {
+    timeFirstReceived[nodeId] = time;
+  }
+  if(timeLastReceived[nodeId].GetSeconds() < time)
+  {
+    timeLastReceived[nodeId] = time;
+  }
   bytesReceived[nodeId] += p->GetSize ();
 }
 
@@ -2171,9 +2183,9 @@ ConfigurePacketSocket(NetDeviceContainer bsDevices, NetDeviceContainer ueDevices
   UintegerValue packetSizeValue;
   GlobalValue::GetValueByName ("udpPacketSize", packetSizeValue);
   Ptr<UniformRandomVariable> startTime = CreateObject<UniformRandomVariable> ();
-  uint32_t trialNumber = 1;
-  startTime->SetAttribute ("Stream", IntegerValue (trialNumber));
   startTime->SetAttribute ("Max", DoubleValue (1.0));
+  startTime->SetAttribute ("Stream", IntegerValue (streamIndex++));
+
   for(uint32_t i = 0; i < bsNodes.GetN(); i++) {
     PacketSocketAddress socketAddr;
     socketAddr.SetSingleDevice (bsDevices.Get (i)->GetIfIndex ());
@@ -2210,7 +2222,7 @@ ConfigureUdpServers (NodeContainer servers, Time startTime, Time stopTime)
 }
 
 void
-ConfigureUdpLAAClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
+ConfigureUdpClients (NodeContainer client, Ipv4InterfaceContainer servers, Time startTime, Time stopTime, Time interval)
 {
   // Randomly distribute the start times
   Ptr<UniformRandomVariable> randomVariable = CreateObject<UniformRandomVariable> ();
@@ -2861,8 +2873,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
           if(cellConfigA == LAA) {
             ApplicationContainer serverApps;
             serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
-            if(!shutA) ConfigureUdpLAAClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
-            else ConfigureUdpLAAClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+            if(!shutA) ConfigureUdpClients (clientNodesA, interfacesA, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpClients (clientNodesA, interfacesA, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
           } else {
             // ApplicationContainer serverApps;
             // serverApps.Add (ConfigureUdpServers (ueNodesA, serverStartTime, serverStopTime));
@@ -2875,8 +2887,8 @@ ConfigureAndRunScenario (Config_e cellConfigA,
           if(cellConfigB == LAA) {
             ApplicationContainer serverApps;
             serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
-            if(!shutB) ConfigureUdpLAAClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
-            else ConfigureUdpLAAClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
+            if(!shutB) ConfigureUdpClients (clientNodesB, interfacesB, clientStartTime, clientStopTime, udpInterval);
+            else ConfigureUdpClients (clientNodesB, interfacesB, Time(Seconds(1000000)), Time(Seconds(1000000.00001)), udpInterval);
           } else {
             // ApplicationContainer serverApps;
             // serverApps.Add (ConfigureUdpServers (ueNodesB, serverStartTime, serverStopTime));
@@ -3144,7 +3156,9 @@ ConfigureAndRunScenario (Config_e cellConfigA,
     uint32_t sum = bsNodesA.GetN() * 2 + bsNodesB.GetN() * 2;
     for (uint32_t i = sum / 2; i < sum; i++)
     {
-      double throughput = static_cast<double> (bytesReceived[i]) * 8 / 1000 / 1000 / durationTime.GetSeconds ();
+      std::cout << "Time first: " << timeFirstReceived[i].GetSeconds () << std::endl; 
+      std::cout << "Time last: "<< timeLastReceived[i].GetSeconds () << std::endl;
+      double throughput = static_cast<double> (bytesReceived[i]) * 8 / 1000 / 1000 / (timeLastReceived[i] - timeFirstReceived[i]).GetSeconds ();
       std::cout << "Throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
     }
 
