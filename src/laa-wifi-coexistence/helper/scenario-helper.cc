@@ -609,9 +609,12 @@ std::vector<CtrlSignalLog> g_ctrlSignalLog;
 std::vector<uint32_t> bytesReceived (MAX_PAIR_NUM);
 std::vector<Time> timeFirstReceived (MAX_PAIR_NUM);
 std::vector<Time> timeLastReceived (MAX_PAIR_NUM);
-std::vector<uint32_t> lteBytesReceived (MAX_PAIR_NUM);
-std::vector<Time> lteTimeFirstReceived (MAX_PAIR_NUM);
-std::vector<Time> lteTimeLastReceived (MAX_PAIR_NUM);
+std::vector<uint32_t> lteMacBytesReceived (MAX_PAIR_NUM);
+std::vector<Time> lteMacTimeFirstReceived (MAX_PAIR_NUM);
+std::vector<Time> lteMacTimeLastReceived (MAX_PAIR_NUM);
+std::vector<uint32_t> ltePdcpBytesReceived (MAX_PAIR_NUM);
+std::vector<Time> ltePdcpTimeFirstReceived (MAX_PAIR_NUM);
+std::vector<Time> ltePdcpTimeLastReceived (MAX_PAIR_NUM);
 
 double g_txopDurationCounter = 0;
 double g_arrivalsDurationCounter = 0;
@@ -633,18 +636,33 @@ SocketRx (std::string context, Ptr<const Packet> p, const Address &addr)
 }
 
 void
+LteRrcRx(std::string context, Ptr<Packet> p) {
+  Time time = Simulator::Now ();
+  uint32_t nodeId = ContextToNodeId (context);
+  if(ltePdcpTimeFirstReceived[nodeId].GetSeconds() == 0) 
+  {
+    ltePdcpTimeFirstReceived[nodeId] = time;
+  }
+  if(ltePdcpTimeLastReceived[nodeId].GetSeconds() < time)
+  {
+    ltePdcpTimeLastReceived[nodeId] = time;
+  }
+  ltePdcpBytesReceived[nodeId] += 1000;// p->GetSize ();
+}
+
+void
 LteMacRx (std::string context, uint8_t rnti, Ptr<Packet> p) {
   Time time = Simulator::Now ();
   uint32_t nodeId = ContextToNodeId (context);
-  if(lteTimeFirstReceived[nodeId].GetSeconds() == 0) 
+  if(lteMacTimeFirstReceived[nodeId].GetSeconds() == 0) 
   {
-    lteTimeFirstReceived[nodeId] = time;
+    lteMacTimeFirstReceived[nodeId] = time;
   }
-  if(lteTimeLastReceived[nodeId].GetSeconds() < time)
+  if(lteMacTimeLastReceived[nodeId].GetSeconds() < time)
   {
-    lteTimeLastReceived[nodeId] = time;
+    lteMacTimeLastReceived[nodeId] = time;
   }
-  lteBytesReceived[nodeId] += p->GetSize ();
+  lteMacBytesReceived[nodeId] += p->GetSize ();
 }
 
 void
@@ -3072,9 +3090,10 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
 
   // these slow down simulations, only enable them if you need them
-  //lteHelper->EnableTraces();
+  // lteHelper->EnableTraces();
   Config::Connect ("/NodeList/*/ApplicationList/*/$ns3::PacketSocketServer/Rx", MakeCallback (&SocketRx));
   Config::Connect ("/NodeList/*/DeviceList/*/$ns3::LteUeNetDevice/ComponentCarrierMapUe/*/LteUeMac/MacRx", MakeCallback (&LteMacRx));
+  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::LteUeNetDevice/LteUeRrc/PdcpSduRx", MakeCallback (&LteRrcRx));
 
   Ptr<RadioEnvironmentMapHelper> remHelper;
   if (generateRem)
@@ -3186,13 +3205,24 @@ ConfigureAndRunScenario (Config_e cellConfigA,
 
     for (uint32_t i = sum / 2; i < sum; i++)
     {
-      Time first = lteTimeFirstReceived[i];
-      Time last = lteTimeLastReceived[i];
+      Time first = lteMacTimeFirstReceived[i];
+      Time last = lteMacTimeLastReceived[i];
       if(first == last) continue;
-      std::cout << "lte time first: " << first.GetSeconds () << std::endl; 
-      std::cout << "lte time last: "<< last.GetSeconds () << std::endl;
-      double throughput = static_cast<double> (lteBytesReceived[i]) * 8 / 1000 / 1000 / (last - first).GetSeconds ();
-      std::cout << "lte throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
+      std::cout << "lte mac time first: " << first.GetSeconds () << std::endl; 
+      std::cout << "lte mac time last: "<< last.GetSeconds () << std::endl;
+      double throughput = static_cast<double> (lteMacBytesReceived[i]) * 8 / 1000 / 1000 / (last - first).GetSeconds ();
+      std::cout << "lte mac throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
+    }
+
+    for (uint32_t i = sum / 2; i < sum; i++)
+    {
+      Time first = ltePdcpTimeFirstReceived[i];
+      Time last = ltePdcpTimeLastReceived[i];
+      if(first == last) continue;
+      std::cout << "lte pdcp time first: " << first.GetSeconds () << std::endl; 
+      std::cout << "lte pdcp time last: "<< last.GetSeconds () << std::endl;
+      double throughput = static_cast<double> (ltePdcpBytesReceived[i]) * 8 / 1000 / 1000 / (last - first).GetSeconds ();
+      std::cout << "lte pdcp throughput for node " << i << ": " << throughput << " Mbit/s" << std::endl;
     }
 
   //

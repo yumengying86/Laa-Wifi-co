@@ -324,6 +324,11 @@ LteUeRrc::GetTypeId (void)
                     "trace fired upon receiving in Sync or out of Sync indications from UE PHY",
                     MakeTraceSourceAccessor (&LteUeRrc::m_phySyncDetectionTrace),
                     "ns3::LteUeRrc::PhySyncDetectionTracedCallback")
+    .AddTraceSource ("PdcpSduRx",
+                    "pdcp sdu rx",
+                    MakeTraceSourceAccessor (&LteUeRrc::m_pdcpSduRx),
+                    "ns3::LteUeRrc::PdcpSduRxTracedCallback")
+
   ;
   return tid;
 }
@@ -642,6 +647,7 @@ void
 LteUeRrc::DoReceivePdcpSdu (LtePdcpSapUser::ReceivePdcpSduParameters params)
 {
   NS_LOG_FUNCTION (this);
+  m_pdcpSduRx(params.pdcpSdu);
   m_asSapUser->RecvData (params.pdcpSdu);
 }
 

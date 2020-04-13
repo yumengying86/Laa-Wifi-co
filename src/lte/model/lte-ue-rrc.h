@@ -402,6 +402,7 @@ public:
   typedef void (* ImsiCidRntiCountTracedCallback)
   (uint64_t imsi, uint16_t cellId, uint16_t rnti, uint8_t count);
 
+  typedef void (*PdcpSduRxTracedCallback) (Ptr<Packet> p);
 
 private:
 
@@ -931,6 +932,8 @@ private:
    *
    */
   TracedCallback<uint64_t, uint16_t, uint16_t> m_radioLinkFailureTrace;
+  
+  TracedCallback<Ptr<Packet>> m_pdcpSduRx;
 
   /// True if a connection request by upper layers is pending.
   bool m_connectionPending;
