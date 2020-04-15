@@ -2095,7 +2095,7 @@ ConfigureWifiAp (NodeContainer bsNodes, struct PhyParams phyParams, Ptr<Spectrum
   spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_bsTxPower));
   spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_bsTxPower));
   spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_bsNoiseFigure));
-  spectrumPhy.Set ("Antennas", UintegerValue (2));
+  spectrumPhy.Set ("Antennas", UintegerValue (1));
   spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
   spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
   spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);
@@ -2165,7 +2165,7 @@ ConfigureWifiSta (NodeContainer ueNodes, struct PhyParams phyParams, Ptr<Spectru
   spectrumPhy.Set ("TxPowerStart", DoubleValue (phyParams.m_ueTxPower));
   spectrumPhy.Set ("TxPowerEnd", DoubleValue (phyParams.m_ueTxPower));
   spectrumPhy.Set ("RxNoiseFigure", DoubleValue (phyParams.m_ueNoiseFigure));
-  spectrumPhy.Set ("Antennas", UintegerValue (2));
+  spectrumPhy.Set ("Antennas", UintegerValue (1));
   spectrumPhy.Set ("MaxSupportedTxSpatialStreams", UintegerValue (1));
   spectrumPhy.Set ("MaxSupportedRxSpatialStreams", UintegerValue (1));
   spectrumPhy.SetPcapDataLinkType (SpectrumWifiPhyHelper::DLT_IEEE802_11_RADIO);

@@ -1,12 +1,12 @@
 #! /bin/bash
 
 # laa and wifi coexistence, nvn
-int=4
-mkdir 10m_100s_nvn_coexist_ltemacpdcpth
+int=2
+mkdir 10m_400s_nvn_coexist_an1
 while(( $int<=4 ))
 do
     core_name=`expr $int \- 1`
-    taskset -c $core_name nohup ./waf --run "scratch/laa --numA=$int --numB=$int --d2=10 --lbtTxop=5 --duration=100" 2>&1  > ./10m_100s_nvn_coexist_ltemacpdcpth/${int}v${int} &
+    taskset -c $core_name nohup time ./waf --run "scratch/laa --numA=$int --numB=$int --d2=10 --lbtTxop=5 --duration=400" 2>&1  > ./10m_400s_nvn_coexist_an1/${int}v${int} &
     sleep 1
     let "int++"
 done
